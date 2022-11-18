@@ -15,7 +15,7 @@ pub fn ray_color(ray: &Ray) -> Color {
     let sphere = Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5);
     if let Some(hit) = ray.hit(sphere, f64::NEG_INFINITY, f64::INFINITY) {
         // Obtain the unit normal vector: -1 <= . <= 1
-        let normal = hit.normal.normalized();
+        let normal = hit.normal_outward.normalized();
         // For color, scale to 0 <= . <= 1
         let color = 0.5 * (normal + 1.0);
 

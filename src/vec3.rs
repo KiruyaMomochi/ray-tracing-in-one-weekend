@@ -1,6 +1,6 @@
 use std::{
     fmt::Display,
-    ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Sub, SubAssign},
+    ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Sub, SubAssign, Neg},
 };
 
 const COLOR_MAX: f64 = 255.0;
@@ -259,6 +259,17 @@ where
 
     fn mul(self, rhs: Self) -> Self::Output {
         Self::new(self[0] * rhs[0], self[1] * rhs[1], self[2] * rhs[2])
+    }
+}
+
+impl<T: Copy> Neg for Vec3<T>
+where
+    T: Neg<Output = T>,
+{
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        Self::new(-self[0], -self[1], -self[2])
     }
 }
 

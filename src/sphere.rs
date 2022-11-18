@@ -45,13 +45,13 @@ impl Hit for Sphere {
 
         // oc is (A - C)
         let oc = ray.origin() - sphere.center();
-        
+
         // a x^2 + b x + c = y
-        
+
         // let b = 2 * half because
         // - discriminant has a factor of 2 and,
         // - b part also has a factor of 2
-        
+
         let direction = ray.direction();
         let a = direction.len_squared();
         let h = direction.dot(oc); // b / 2
@@ -70,10 +70,12 @@ impl Hit for Sphere {
 
         let roots = [(-h - discriminant_s) / a, (-h + discriminant_s) / a];
         // Compute the roots and find acceptable one
-        let t = roots.into_iter().find(|root| root >= &t_min && root <= &t_max)?;
+        let t = roots
+            .into_iter()
+            .find(|root| root >= &t_min && root <= &t_max)?;
 
         let point = ray.at(t);
-        let normal = (point - sphere.center()) / sphere.radius();
+        let normal_outward = (point - sphere.center()) / sphere.radius();
 
         // if direction.x() == 0.0 && direction.y() == 0.0 {
         //     println!("ray direction: {}", direction);
@@ -81,6 +83,10 @@ impl Hit for Sphere {
         //     println!("point: {}, normal: {}", point, normal);
         // }
 
-        Some(HitRecord { normal, point, t })
+        Some(HitRecord {
+            normal_outward,
+            point,
+            t,
+        })
     }
 }
