@@ -1,0 +1,45 @@
+{
+    // IntelliSense を使用して利用可能な属性を学べます。
+    // 既存の属性の説明をホバーして表示します。
+    // 詳細情報は次を確認してください: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'ray_tracing_in_one_weekend'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=ray_tracing_in_one_weekend",
+                    "--package=ray_tracing_in_one_weekend"
+                ],
+                "filter": {
+                    "name": "ray_tracing_in_one_weekend",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'ray_tracing_in_one_weekend'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=ray_tracing_in_one_weekend",
+                    "--package=ray_tracing_in_one_weekend"
+                ],
+                "filter": {
+                    "name": "ray_tracing_in_one_weekend",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
