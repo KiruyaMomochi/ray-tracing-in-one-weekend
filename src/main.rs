@@ -1,5 +1,5 @@
 use indicatif::ProgressBar;
-use ray_tracing_in_one_weekend::{Camera, Color, Point3, Ray, Sphere};
+use ray_tracing_in_one_weekend::{Color, Point3, Ray, Sphere, Camera};
 use std::{
     fs,
     io::{BufWriter, Write},
