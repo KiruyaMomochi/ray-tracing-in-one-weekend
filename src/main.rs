@@ -6,6 +6,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Use 16:9 aspect ratio
     const ASPECT_RATIO: f64 = 16.0 / 9.0;
     const IMAGE_HEIGHT: u64 = 255;
+    const SAMPLES_PER_PIXEL: u64 = 100;
 
     // World
     let mut world = World::new();
@@ -18,8 +19,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let mut file = BufWriter::new(fs::File::create("image.ppm")?);
 
-    let tracer = RayTracer::new(world, camera);
-    tracer.trace(&mut file, IMAGE_HEIGHT)?;
+    let tracer = RayTracer::new(world, camera, IMAGE_HEIGHT, SAMPLES_PER_PIXEL);
+    tracer.trace(&mut file)?;
 
     Ok(())
 }

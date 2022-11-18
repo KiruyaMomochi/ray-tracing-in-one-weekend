@@ -1,6 +1,6 @@
 use std::{
     fmt::Display,
-    ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Sub, SubAssign, Neg},
+    ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 
 const COLOR_MAX: f64 = 255.0;
@@ -51,12 +51,6 @@ impl<T: Copy + Default> Vec3<T> {
     }
 }
 
-impl Vec3<f64> {
-    pub fn unit() -> Self {
-        Self([1.0, 1.0, 1.0])
-    }
-}
-
 impl<T> Vec3<T>
 where
     T: Copy + Mul<Output = T> + std::ops::Add<Output = T> + std::ops::Sub<Output = T>,
@@ -104,19 +98,30 @@ where
         self[0] * other[0] + self[1] * other[1] + self[2] * other[2]
     }
 
-
     pub fn len_squared(self) -> T {
         self.dot(self)
     }
 }
 
 impl Vec3<f64> {
+    pub fn unit() -> Self {
+        Self([1.0, 1.0, 1.0])
+    }
+
     pub fn len(&self) -> f64 {
         self.len_squared().sqrt()
     }
 
     pub fn normalized(self) -> Self {
         self / self.len()
+    }
+
+    pub fn clamp(&self, min: f64, max: f64) -> Self {
+        Self([
+            self.0[0].clamp(min, max),
+            self.0[1].clamp(min, max),
+            self.0[2].clamp(min, max),
+        ])
     }
 }
 
@@ -189,8 +194,7 @@ where
     }
 }
 
-impl Add<Vec3<f64>> for f64
-{
+impl Add<Vec3<f64>> for f64 {
     type Output = Vec3<f64>;
 
     fn add(self, rhs: Vec3<f64>) -> Self::Output {
@@ -209,8 +213,7 @@ where
     }
 }
 
-impl Mul<Vec3<f64>> for f64
-{
+impl Mul<Vec3<f64>> for f64 {
     type Output = Vec3<f64>;
 
     fn mul(self, rhs: Vec3<f64>) -> Self::Output {
@@ -276,7 +279,11 @@ where
 impl<T: Copy + Display> Display for Vec3<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let precision = f.precision().unwrap_or(2);
-        write!(f, "{:.*} {:.*} {:.*}", precision, self[0], precision, self[1], precision, self[2])
+        write!(
+            f,
+            "{:.*} {:.*} {:.*}",
+            precision, self[0], precision, self[1], precision, self[2]
+        )
     }
 }
 
