@@ -5,7 +5,7 @@ use std::{
 
 const COLOR_MAX: f64 = 255.0;
 
-#[derive(Clone, Debug, Copy)]
+#[derive(Clone, Debug, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Vec3<T: Copy>([T; 3]);
 
 pub type Point3 = Vec3<f64>;
@@ -61,10 +61,24 @@ impl<T> Vec3<T>
 where
     T: Copy + Mul<Output = T> + std::ops::Add<Output = T> + std::ops::Sub<Output = T>,
 {
-    pub fn dot(&self, other: Self) -> T {
-        self[0] * other[0] + self[1] * other[1] + self[2] * other[2]
-    }
-
+    /// Computes the cross product of two vectors. The cross product is
+    /// perpendicular to both vectors with a magnitude equal to the area of a
+    /// parallelogram with the two vectors as sides.
+    ///
+    /// This function implements the cross product as defined by the right-hand
+    /// rule.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ray_tracing_in_one_weekend::Vec3;
+    /// let a = Vec3::new(1.0, 0.0, 0.0);
+    /// let b = Vec3::new(0.0, 1.0, 0.0);
+    /// let c = Vec3::new(0.0, 0.0, 1.0);
+    /// assert_eq!(a.cross(b), c);
+    /// assert_eq!(b.cross(c), a);
+    /// assert_eq!(c.cross(a), b);
+    /// ```
     pub fn cross(&self, other: Self) -> Self {
         Self::new(
             self[1] * other[2] - self[2] * other[1],
@@ -72,6 +86,24 @@ where
             self[0] * other[1] - self[1] * other[0],
         )
     }
+
+    /// Computes the dot product of two vectors.
+    ///
+    /// The dot product is computed as a[0] * b[0] + a[1] * b[1] + a[2] * b[2].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ray_tracing_in_one_weekend::Vec3;
+    /// let x = Vec3::new(1.0, 2.0, 3.0);
+    /// let y = Vec3::new(4.0, 5.0, 6.0);
+    /// let dot = x.dot(y);
+    /// assert_eq!(dot, 32.0);
+    /// ```
+    pub fn dot(&self, other: Self) -> T {
+        self[0] * other[0] + self[1] * other[1] + self[2] * other[2]
+    }
+
 
     pub fn len_squared(self) -> T {
         self.dot(self)
@@ -143,6 +175,26 @@ where
         self[0] -= rhs[0];
         self[1] -= rhs[1];
         self[2] -= rhs[2];
+    }
+}
+
+impl<T: Copy> Add<T> for Vec3<T>
+where
+    T: Add<Output = T>,
+{
+    type Output = Self;
+
+    fn add(self, rhs: T) -> Self::Output {
+        Self::new(self[0] + rhs, self[1] + rhs, self[2] + rhs)
+    }
+}
+
+impl Add<Vec3<f64>> for f64
+{
+    type Output = Vec3<f64>;
+
+    fn add(self, rhs: Vec3<f64>) -> Self::Output {
+        Vec3::new(self + rhs[0], self + rhs[1], self + rhs[2])
     }
 }
 

@@ -1,102 +1,9 @@
 use indicatif::ProgressBar;
+use ray_tracing_in_one_weekend::{ray_hit_sphere, Camera, Color, Point3, Ray, Sphere};
 use std::{
     fs,
     io::{BufWriter, Write},
 };
-use vec3::{Point3, Vec3};
-
-mod ray;
-mod vec3;
-
-use crate::{ray::Ray, vec3::Color};
-
-/// Simple camera
-#[derive(Debug, Clone)]
-struct Camera {
-    // Virtual viewport to pass scene rays
-    pub viewport_height: f64,
-    pub viewport_width: f64,
-    /// Distance between projection plane and projection point
-    pub focal_length: f64,
-    pub origin: Point3,
-    /// x-asis
-    pub horizontal: Vec3<f64>,
-    /// y-axis
-    pub vertical: Vec3<f64>,
-    pub lower_left_corner: Point3,
-}
-
-impl Camera {
-    pub fn new(viewport_height: f64, aspect_ratio: f64, focal_length: f64) -> Self {
-        let origin = Point3::zero();
-        let viewport_width = viewport_height * aspect_ratio;
-        let horizontal = Vec3::new(viewport_width, 0.0, 0.0);
-        let vertical = Vec3::new(0.0, viewport_height, 0.0);
-        let lower_left_corner =
-            origin - horizontal / 2.0 - vertical / 2.0 - Vec3::new(0.0, 0.0, focal_length);
-
-        Self {
-            viewport_height,
-            viewport_width,
-            focal_length,
-            origin,
-            horizontal,
-            vertical,
-            lower_left_corner,
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-struct Sphere {
-    center: Point3,
-    radius: f64,
-}
-
-impl Sphere {
-    fn new(center: Point3, radius: f64) -> Self {
-        Self { center, radius }
-    }
-
-    fn center(&self) -> Vec3<f64> {
-        self.center
-    }
-
-    fn radius(&self) -> f64 {
-        self.radius
-    }
-}
-
-/// Check if ray hits the sphere
-///
-/// The equation of the sphere in vector form is
-///
-///     (P - C) . (P - C) = r^2
-///
-/// where C is the vector from sphere center, and P is the point.
-///
-/// When P is the ray P(t) = A + tb for some t,  the equation expands to
-///
-///     (A + t b - C) . (A + t b - C) = r^2
-///
-/// and in quadratic form
-///
-///     (b.b) t^2 + (2b.(A-C)) t + ((A-C).(A-C) - r^2) = 0
-///
-fn ray_hit_sphere(ray: &Ray, sphere: &Sphere) -> bool {
-    // oc is (A - C)
-    let oc = ray.origin() - sphere.center();
-
-    // a x^2 + b x + c = y
-    let a = ray.direction().dot(ray.direction());
-    let b = 2.0 * ray.direction().dot(oc);
-    let c = oc.dot(oc) - sphere.radius() * sphere.radius();
-
-    // b^2 - 4 ac > 0 => equations has 2 roots
-    let discriminant = b * b - 4.0 * a * c;
-
-    discriminant > 0.0
-}
 
 /// Returns the color of the ray-tracing
 ///
@@ -104,13 +11,15 @@ fn ray_hit_sphere(ray: &Ray, sphere: &Sphere) -> bool {
 ///
 /// Background color is a simple gradient, which
 /// linearly blends white and blue depending on the height of the y coordinate.
-fn ray_color(ray: &Ray) -> Color {
-    let sphere = &&Sphere {
-        center: Point3::new(0.0, 0.0, -1.0),
-        radius: 0.5,
-    };
-    if ray_hit_sphere(ray, sphere) {
-        return Color::red();
+pub fn ray_color(ray: &Ray) -> Color {
+    let sphere = Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5);
+    if let Some(hit) = ray_hit_sphere(ray, &sphere) {
+        // Obtain the unit normal vector: -1 <= . <= 1
+        let normal = (hit - sphere.center()).normalized();
+        // For color, scale to 0 <= . <= 1
+        let color = 0.5 * (normal + 1.0);
+
+        return color;
     }
 
     // Scale the ray direction to unit length -1 <= direction.y <= 1

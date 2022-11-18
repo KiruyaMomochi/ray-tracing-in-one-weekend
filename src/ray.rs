@@ -1,4 +1,4 @@
-use crate::vec3::{Point3, Vec3};
+use crate::{vec3::{Point3, Vec3}};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Ray {
@@ -19,6 +19,8 @@ impl Ray {
         self.direction
     }
 
+    /// Return a point along the ray at `t`.
+    /// Computed by (origin + t * direction)
     pub fn at(&self, t: f64) -> Point3 {
         self.origin + t * self.direction
     }
