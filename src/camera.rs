@@ -1,4 +1,6 @@
-use crate::{Vec3, Point3};
+use std::fmt::Display;
+
+use crate::{Point3, Vec3};
 
 /// Simple camera
 #[derive(Debug, Clone)]
@@ -34,5 +36,28 @@ impl Camera {
             vertical,
             lower_left_corner,
         }
+    }
+}
+
+impl Display for Camera {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Camera {{
+    viewport: {:.2} x {:.2},
+    focal: {:.2},
+    origin: [{}],
+    horizontal: [{}]
+    vertical: {},
+    lower left corner: {}
+}}",
+            self.viewport_width,
+            self.viewport_height,
+            self.focal_length,
+            self.origin,
+            self.horizontal,
+            self.vertical,
+            self.lower_left_corner
+        )
     }
 }

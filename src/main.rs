@@ -1,5 +1,5 @@
 use indicatif::ProgressBar;
-use ray_tracing_in_one_weekend::{Color, Point3, Ray, Sphere, Camera};
+use ray_tracing_in_one_weekend::{Color, Point3, Ray, Sphere, Camera, World, Hit};
 use std::{
     fs,
     io::{BufWriter, Write},
@@ -11,9 +11,8 @@ use std::{
 ///
 /// Background color is a simple gradient, which
 /// linearly blends white and blue depending on the height of the y coordinate.
-pub fn ray_color(ray: &Ray) -> Color {
-    let sphere = Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5);
-    if let Some(hit) = ray.hit(sphere, f64::NEG_INFINITY, f64::INFINITY) {
+pub fn ray_color<T: Hit>(ray: &Ray, hittable: &T) -> Color {
+    if let Some(hit) = ray.hit(hittable, 0.0, f64::INFINITY) {
         // Obtain the unit normal vector: -1 <= . <= 1
         let normal = hit.normal_outward.normalized();
         // For color, scale to 0 <= . <= 1
@@ -36,16 +35,20 @@ pub fn ray_color(ray: &Ray) -> Color {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Image
-
     // Use 16:9 aspect ratio
     const ASPECT_RATIO: f64 = 16.0 / 9.0;
     const IMAGE_HEIGHT: u64 = 255;
     const IMAGE_WIDTH: u64 = (ASPECT_RATIO * IMAGE_HEIGHT as f64) as u64;
-
     const COLOR_MAX: u8 = 255;
+
+    // World
+    let mut world = World::new();
+    world.add(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5));
+    world.add(Sphere::new(Point3::new(0.0, -100.0, -1.0), 90.0));
 
     // Camera (-1 to 1, -1 to 1, -1 to 0)
     let camera = Camera::new(2.0, ASPECT_RATIO, 1.0);
+    println!("{}", camera);
 
     let mut file = BufWriter::new(fs::File::create("image.ppm")?);
 
@@ -69,7 +72,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 - camera.origin;
             let ray = Ray::new(camera.origin, direction);
 
-            let pixel = ray_color(&ray);
+            let pixel = ray_color(&ray, &world);
             writeln!(file, "{}", pixel.format_color())?;
         }
     }

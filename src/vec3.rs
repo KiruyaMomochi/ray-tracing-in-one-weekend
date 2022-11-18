@@ -275,7 +275,8 @@ where
 
 impl<T: Copy + Display> Display for Vec3<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} {} {}", self[0], self[1], self[2])
+        let precision = f.precision().unwrap_or(2);
+        write!(f, "{:.*} {:.*} {:.*}", precision, self[0], precision, self[1], precision, self[2])
     }
 }
 

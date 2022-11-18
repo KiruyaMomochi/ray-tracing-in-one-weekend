@@ -39,7 +39,7 @@ pub struct RaywardHitRecord {
     /// Distance from ray origin to hit point
     pub t: f64,
     /// True if ray is outside the object
-    front_face: bool,
+    pub front_face: bool,
 }
 
 pub trait Hit {
