@@ -26,7 +26,7 @@ const COLOR_MAX: u8 = 255;
 impl RayTracer {
     pub fn new(world: World, camera: Camera) -> Self {
         Self {
-            aspect_ratio: camera.viewport_width / camera.viewport_height,
+            aspect_ratio: camera.aspect_ratio(),
             world,
             camera,
         }
@@ -59,12 +59,8 @@ impl RayTracer {
                 // u: left 0.0 -> 1.0 right
                 // v: botm 0.0 -> 1.0 up
                 let (u, v) = (i / (width - 1.0), j / (height - 1.0));
-
-                let direction =
-                    camera.lower_left_corner + u * camera.horizontal + v * camera.vertical
-                        - camera.origin;
-                let ray = Ray::new(camera.origin, direction);
-
+                
+                let ray = camera.cast(u, v);
                 let pixel = ray_color(&ray, world, t_min, t_max);
                 writeln!(buffer, "{}", pixel.format_color())?;
             }

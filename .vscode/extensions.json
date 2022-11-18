@@ -1,6 +1,7 @@
 {
     "recommendations": [
         "ngtystr.ppm-pgm-viewer-for-vscode",
-        "rust-lang.rust-analyzer"
+        "rust-lang.rust-analyzer",
+        "serayuzgur.crates"
     ]
 }
