@@ -61,11 +61,11 @@ impl<T> Vec3<T>
 where
     T: Copy + Mul<Output = T> + std::ops::Add<Output = T> + std::ops::Sub<Output = T>,
 {
-    pub fn dot(&self, other: &Self) -> T {
+    pub fn dot(&self, other: Self) -> T {
         self[0] * other[0] + self[1] * other[1] + self[2] * other[2]
     }
 
-    pub fn cross(&self, other: &Self) -> Self {
+    pub fn cross(&self, other: Self) -> Self {
         Self::new(
             self[1] * other[2] - self[2] * other[1],
             self[2] * other[0] - self[0] * other[2],
@@ -73,7 +73,7 @@ where
         )
     }
 
-    pub fn len_squared(&self) -> T {
+    pub fn len_squared(self) -> T {
         self.dot(self)
     }
 }
@@ -228,5 +228,9 @@ impl Color {
 
     pub fn white() -> Self {
         Self::unit()
+    }
+
+    pub fn red() -> Self {
+        Self::new(1.0, 0.0, 0.0)
     }
 }
