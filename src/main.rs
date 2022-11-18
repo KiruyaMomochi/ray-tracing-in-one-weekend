@@ -1,5 +1,5 @@
 use indicatif::ProgressBar;
-use ray_tracing_in_one_weekend::{ray_hit_sphere, Camera, Color, Point3, Ray, Sphere};
+use ray_tracing_in_one_weekend::{Camera, Color, Point3, Ray, Sphere};
 use std::{
     fs,
     io::{BufWriter, Write},
@@ -13,9 +13,9 @@ use std::{
 /// linearly blends white and blue depending on the height of the y coordinate.
 pub fn ray_color(ray: &Ray) -> Color {
     let sphere = Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5);
-    if let Some(hit) = ray_hit_sphere(ray, &sphere) {
+    if let Some(hit) = ray.hit(sphere, f64::NEG_INFINITY, f64::INFINITY) {
         // Obtain the unit normal vector: -1 <= . <= 1
-        let normal = (hit - sphere.center()).normalized();
+        let normal = hit.normal.normalized();
         // For color, scale to 0 <= . <= 1
         let color = 0.5 * (normal + 1.0);
 

@@ -1,4 +1,4 @@
-use crate::{vec3::{Point3, Vec3}};
+use crate::{vec3::{Point3, Vec3}, hit::{Hit, HitRecord}};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Ray {
@@ -23,5 +23,11 @@ impl Ray {
     /// Computed by (origin + t * direction)
     pub fn at(&self, t: f64) -> Point3 {
         self.origin + t * self.direction
+    }
+}
+
+impl Ray {
+    pub fn hit<T: Hit>(&self, hittable: T, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        hittable.hit(self, t_min, t_max)
     }
 }
