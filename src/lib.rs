@@ -110,7 +110,8 @@ pub fn ray_color<T: Hit>(ray: &Ray, hittable: &T, depth: i64, t_min: f64, t_max:
 
         // Create a new ray from the hit point, to
         // a random point inside unit sphere at (hit point + normal)
-        let target = hit.point + normal + Point3::random_in_unit_sphere();
+        // The random point is normalized, to make it true Lambertian
+        let target = hit.point + normal + Point3::random_in_unit_sphere().normalized();
         let diffuse_direction = target - hit.point;
         let ray = Ray::new(hit.point, diffuse_direction);
 
