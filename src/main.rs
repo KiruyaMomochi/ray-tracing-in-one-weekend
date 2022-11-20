@@ -11,7 +11,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     // World
     let mut world = World::new();
     world.add(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5));
-    world.add(Sphere::new(Point3::new(0.0, -100.0, -1.0), 90.0));
+    world.add(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0));
 
     // Camera (-1 to 1, -1 to 1, -1 to 0)
     let camera = Camera::new(2.0, ASPECT_RATIO, 1.0);

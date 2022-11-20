@@ -1,7 +1,11 @@
 use std::{
     fmt::Display,
-    ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub, SubAssign},
+    ops::{
+        Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Range, Sub, SubAssign,
+    },
 };
+
+use rand::Rng;
 
 const COLOR_MAX: f64 = 255.0;
 
@@ -104,6 +108,17 @@ where
 }
 
 impl Vec3<f64> {
+    /// Generate a random vector with components in the `range`.
+    pub fn random(range: Range<f64>) -> Self {
+        let mut rng = rand::thread_rng();
+
+        Self([
+            rng.gen_range(range.clone()),
+            rng.gen_range(range.clone()),
+            rng.gen_range(range),
+        ])
+    }
+
     pub fn unit() -> Self {
         Self([1.0, 1.0, 1.0])
     }
@@ -118,10 +133,18 @@ impl Vec3<f64> {
 
     pub fn clamp(&self, min: f64, max: f64) -> Self {
         Self([
-            self.0[0].clamp(min, max),
-            self.0[1].clamp(min, max),
-            self.0[2].clamp(min, max),
+            self[0].clamp(min, max),
+            self[1].clamp(min, max),
+            self[2].clamp(min, max),
         ])
+    }
+
+    pub fn round(&self) -> Self {
+        Self([self[0].round(), self[1].round(), self[2].round()])
+    }
+
+    pub fn sqrt(&self) -> Self {
+        Self([self[0].sqrt(), self[1].sqrt(), self[2].sqrt()])
     }
 }
 
@@ -146,7 +169,7 @@ where
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
-        Self::new(self[0] + rhs[0], self[1] + rhs[1], self[2] + rhs[2])
+        Self::Output::new(self[0] + rhs[0], self[1] + rhs[1], self[2] + rhs[2])
     }
 }
 
@@ -168,7 +191,7 @@ where
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
-        Self::new(self[0] - rhs[0], self[1] - rhs[1], self[2] - rhs[2])
+        Self::Output::new(self[0] - rhs[0], self[1] - rhs[1], self[2] - rhs[2])
     }
 }
 
@@ -190,7 +213,7 @@ where
     type Output = Self;
 
     fn add(self, rhs: T) -> Self::Output {
-        Self::new(self[0] + rhs, self[1] + rhs, self[2] + rhs)
+        Self::Output::new(self[0] + rhs, self[1] + rhs, self[2] + rhs)
     }
 }
 
@@ -209,7 +232,18 @@ where
     type Output = Self;
 
     fn mul(self, rhs: T) -> Self::Output {
-        Self::new(self[0] * rhs, self[1] * rhs, self[2] * rhs)
+        Self::Output::new(self[0] * rhs, self[1] * rhs, self[2] * rhs)
+    }
+}
+
+impl<T: Copy> Mul<T> for &Vec3<T>
+where
+    T: Mul<Output = T>,
+{
+    type Output = Vec3<T>;
+
+    fn mul(self, rhs: T) -> Self::Output {
+        Self::Output::new(self[0] * rhs, self[1] * rhs, self[2] * rhs)
     }
 }
 
@@ -217,6 +251,14 @@ impl Mul<Vec3<f64>> for f64 {
     type Output = Vec3<f64>;
 
     fn mul(self, rhs: Vec3<f64>) -> Self::Output {
+        Vec3::new(self * rhs[0], self * rhs[1], self * rhs[2])
+    }
+}
+
+impl Mul<&Vec3<f64>> for f64 {
+    type Output = Vec3<f64>;
+
+    fn mul(self, rhs: &Vec3<f64>) -> Self::Output {
         Vec3::new(self * rhs[0], self * rhs[1], self * rhs[2])
     }
 }
@@ -239,7 +281,7 @@ where
     type Output = Self;
 
     fn div(self, rhs: T) -> Self::Output {
-        Self::new(self[0] / rhs, self[1] / rhs, self[2] / rhs)
+        Self::Output::new(self[0] / rhs, self[1] / rhs, self[2] / rhs)
     }
 }
 
@@ -261,7 +303,18 @@ where
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
-        Self::new(self[0] * rhs[0], self[1] * rhs[1], self[2] * rhs[2])
+        Self::Output::new(self[0] * rhs[0], self[1] * rhs[1], self[2] * rhs[2])
+    }
+}
+
+impl<T: Copy> Mul for &Vec3<T>
+where
+    T: Mul<Output = T>,
+{
+    type Output = Vec3<T>;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        Self::Output::new(self[0] * rhs[0], self[1] * rhs[1], self[2] * rhs[2])
     }
 }
 
@@ -272,7 +325,7 @@ where
     type Output = Self;
 
     fn neg(self) -> Self::Output {
-        Self::new(-self[0], -self[1], -self[2])
+        Self::Output::new(-self[0], -self[1], -self[2])
     }
 }
 
@@ -288,12 +341,22 @@ impl<T: Copy + Display> Display for Vec3<T> {
 }
 
 impl Color {
+    /// For a given color, return the PPM color string.
+    /// The color is clamped to [0, 255], and then rounded to the nearest integer.
+    ///
+    /// # Note
+    /// - The PPM color string is of the form "R G B".
+    /// - Colors are "gamma corrected" by raising them to the power of 1/2.
     pub fn format_color(&self) -> String {
+        let color = self;
+        let color = color.sqrt().clamp(0.0, 0.999);
+        let color = (COLOR_MAX * color).round();
+
         format!(
             "{} {} {}",
-            (COLOR_MAX * self[0]).round() as u64,
-            (COLOR_MAX * self[1]).round() as u64,
-            (COLOR_MAX * self[2]).round() as u64
+            color[0] as u64,
+            color[1] as u64,
+            color[2] as u64
         )
     }
 
@@ -301,7 +364,35 @@ impl Color {
         Self::unit()
     }
 
+    pub fn black() -> Self {
+        Self::zero()
+    }
+
     pub fn red() -> Self {
         Self::new(1.0, 0.0, 0.0)
+    }
+
+    pub fn green() -> Self {
+        Self::new(0.0, 1.0, 0.0)
+    }
+
+    pub fn blue() -> Self {
+        Self::new(0.0, 0.0, 1.0)
+    }
+}
+
+impl Point3 {
+    /// Generate a random point in a unit radius sphere
+    ///
+    /// The generation uses the rejection method.
+    /// First pick a random point in a unit cube, then reject it if
+    /// it is outside the unit sphere.
+    pub fn random_in_unit_sphere() -> Self {
+        loop {
+            let v = Vec3::random(-1.0..1.0);
+            if v.len() < 1.0 {
+                return v;
+            }
+        }
     }
 }

@@ -20,6 +20,7 @@ pub struct RayTracer {
     aspect_ratio: f64,
     world: World,
     camera: Camera,
+    pub max_depth: i64,
     pub samples_per_pixel: u64,
     pub image_height: u64,
 }
@@ -34,6 +35,7 @@ impl RayTracer {
             camera,
             image_height,
             samples_per_pixel,
+            max_depth: 5,
         }
     }
 
@@ -56,7 +58,7 @@ impl RayTracer {
 
         let bar = ProgressBar::new(image_height);
         let mut rng = rand::thread_rng();
-        
+
         for j in 0..image_height {
             bar.set_position(j);
             for i in 0..image_width {
@@ -72,7 +74,7 @@ impl RayTracer {
                     let v = (j + rng.gen::<f64>()) / (height - 1.0);
 
                     let ray = camera.cast(u, v);
-                    pixel_color_sum += ray_color(&ray, world, t_min, t_max);
+                    pixel_color_sum += ray_color(&ray, world, self.max_depth, t_min, t_max);
                 }
 
                 let pixel_color = (pixel_color_sum / (samples_per_pixel as f64)).clamp(0.0, 0.999);
@@ -86,7 +88,8 @@ impl RayTracer {
     }
 
     pub fn trace<T: Write>(&self, buffer: &mut T) -> Result<(), Box<dyn Error>> {
-        self.trace_in(buffer, 0.0, f64::INFINITY)
+        // To fix the shadow acne problem, which some hit rays may not at exactly t = 0
+        self.trace_in(buffer, 0.001, f64::INFINITY)
     }
 }
 
@@ -96,14 +99,23 @@ impl RayTracer {
 ///
 /// Background color is a simple gradient, which
 /// linearly blends white and blue depending on the height of the y coordinate.
-pub fn ray_color<T: Hit>(ray: &Ray, hittable: &T, t_min: f64, t_max: f64) -> Color {
+pub fn ray_color<T: Hit>(ray: &Ray, hittable: &T, depth: i64, t_min: f64, t_max: f64) -> Color {
     if let Some(hit) = ray.hit(hittable, t_min, t_max) {
-        // Obtain the unit normal vector: -1 <= . <= 1
-        let normal = hit.normal_outward.normalized();
-        // For color, scale to 0 <= . <= 1
-        let color = 0.5 * (normal + 1.0);
+        let normal = hit.normal_outward;
 
-        return color;
+        // If we've exceeded the ray bounce limit, no more light is gathered
+        if depth <= 0 {
+            return Color::black();
+        }
+
+        // Create a new ray from the hit point, to
+        // a random point inside unit sphere at (hit point + normal)
+        let target = hit.point + normal + Point3::random_in_unit_sphere();
+        let diffuse_direction = target - hit.point;
+        let ray = Ray::new(hit.point, diffuse_direction);
+
+        // Return the color of the new ray, with a 50% attenuation
+        return 0.5 * ray_color(&ray, hittable, depth - 1, t_min, t_max);
     }
 
     // Scale the ray direction to unit length -1 <= direction.y <= 1

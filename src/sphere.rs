@@ -67,8 +67,8 @@ impl Hit for Sphere {
 
         // (-b +- sqrt(dis)) / (2a) => (-h +- sqrt(dis_h)) / a
         let discriminant_s = discriminant_h.sqrt();
-
         let roots = [(-h - discriminant_s) / a, (-h + discriminant_s) / a];
+        
         // Compute the roots and find acceptable one
         let t = roots
             .into_iter()
