@@ -354,9 +354,7 @@ impl Color {
 
         format!(
             "{} {} {}",
-            color[0] as u64,
-            color[1] as u64,
-            color[2] as u64
+            color[0] as u64, color[1] as u64, color[2] as u64
         )
     }
 
@@ -387,12 +385,24 @@ impl Point3 {
     /// The generation uses the rejection method.
     /// First pick a random point in a unit cube, then reject it if
     /// it is outside the unit sphere.
-    pub fn random_in_unit_sphere() -> Self {
+    pub fn random_in_sphere() -> Self {
         loop {
             let v = Vec3::random(-1.0..1.0);
             if v.len() < 1.0 {
                 return v;
             }
+        }
+    }
+
+    /// Generate a random point in the unit hemisphere
+    /// of the given normal.
+    pub fn random_in_hemisphere(normal: Vec3<f64>) -> Point3 {
+        let v = Self::random_in_sphere();
+        if v.dot(normal) > 0.0 {
+            // In the same hemisphere as the normal
+            v
+        } else {
+            -v
         }
     }
 }
