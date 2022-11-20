@@ -77,7 +77,7 @@ impl RayTracer {
                     pixel_color_sum += ray_color(&ray, world, self.max_depth, t_min, t_max);
                 }
 
-                let pixel_color = (pixel_color_sum / (samples_per_pixel as f64)).clamp(0.0, 0.999);
+                let pixel_color = pixel_color_sum / (samples_per_pixel as f64);
                 writeln!(buffer, "{}", pixel_color.format_color())?;
             }
         }
