@@ -8,7 +8,7 @@ where
 {
     /// Scatter a ray, returning the ray scattered and the attenuation of the ray.
     ///
-    /// For details, see [Volume Scattering Process](https://www.pbr-book.org/3ed-2018/Volume_Scattering/Volume_Scattering_Processes) 
+    /// For details, see [Volume Scattering Process](https://www.pbr-book.org/3ed-2018/Volume_Scattering/Volume_Scattering_Processes)
     /// in the Physically Based Rendering book.
     fn scatter(&self, ray: &Ray, hit_record: &HitRecord) -> Option<(Ray, Color)>;
 }
@@ -49,11 +49,13 @@ impl Material for Lambertian {
 pub struct Metal {
     /// The color reflected by the surface
     albedo: Color,
+    /// Fuzziness of the material, zero means no perturbation.
+    fuzziness: f64,
 }
 
 impl Metal {
-    pub fn new(albedo: Color) -> Self {
-        Self { albedo }
+    pub fn new(albedo: Color, fuzziness: f64) -> Self {
+        Self { albedo, fuzziness }
     }
 }
 
@@ -63,7 +65,8 @@ impl Material for Metal {
             .direction()
             .reflect(hit_record.normal_outward)
             .normalized();
-        let scattered = Ray::new(hit_record.point, reflected);
+        let direction = reflected + self.fuzziness * Vec3::random_in_sphere();
+        let scattered = Ray::new(hit_record.point, direction);
 
         // if the ray is reflected towards the surface, then we scatter it
         if scattered.direction().dot(hit_record.normal_outward) > 0.0 {
