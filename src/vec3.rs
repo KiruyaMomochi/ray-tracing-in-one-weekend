@@ -8,6 +8,7 @@ use std::{
 use rand::Rng;
 
 const COLOR_MAX: f64 = 255.0;
+const EPSILON: f64 = 1.0e-8;
 
 #[derive(Clone, Debug, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Vec3<T: Copy>([T; 3]);
@@ -145,6 +146,14 @@ impl Vec3<f64> {
 
     pub fn sqrt(&self) -> Self {
         Self([self[0].sqrt(), self[1].sqrt(), self[2].sqrt()])
+    }
+
+    pub fn near_zero(self) -> bool {
+        self.0.iter().all(|&x| x.abs() < EPSILON)
+    }
+
+    pub fn reflect(self, normal: Self) -> Self {
+        self - 2.0 * self.dot(normal) * normal
     }
 }
 

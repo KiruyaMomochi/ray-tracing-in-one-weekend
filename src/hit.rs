@@ -1,4 +1,6 @@
-use crate::{Point3, Ray, Vec3};
+use std::rc::Rc;
+
+use crate::{Point3, Ray, Vec3, Material};
 
 pub struct HitRecord {
     /// Point of intersection
@@ -7,6 +9,8 @@ pub struct HitRecord {
     pub normal_outward: Vec3<f64>,
     /// Distance from ray origin to hit point
     pub t: f64,
+    /// Material of the object hit
+    pub material: Rc<dyn Material>,
 }
 
 impl HitRecord {

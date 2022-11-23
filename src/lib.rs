@@ -1,5 +1,6 @@
 mod camera;
 mod hit;
+pub mod material;
 mod ray;
 mod sphere;
 mod vec3;
@@ -8,6 +9,7 @@ mod world;
 pub use camera::Camera;
 pub use hit::Hit;
 use indicatif::ProgressBar;
+pub use material::Material;
 use rand::Rng;
 pub use ray::Ray;
 pub use sphere::Sphere;
@@ -101,32 +103,25 @@ impl RayTracer {
 /// linearly blends white and blue depending on the height of the y coordinate.
 pub fn ray_color<T: Hit>(ray: &Ray, hittable: &T, depth: i64, t_min: f64, t_max: f64) -> Color {
     if let Some(hit) = ray.hit(hittable, t_min, t_max) {
-        let normal = hit.normal_outward;
-
-        // If we've exceeded the ray bounce limit, no more light is gathered
         if depth <= 0 {
-            return Color::black();
+            // If we've exceeded the ray bounce limit, no more light is gathered
+            Color::black()
+        } else if let Some((ray, attenuation)) = hit.material.scatter(ray, &hit) {
+            // Return the scattered ray
+            attenuation * ray_color(&ray, hittable, depth - 1, t_min, t_max)
+        } else {
+            Color::black()
         }
+    } else {
+        // Scale the ray direction to unit length -1 <= direction.y <= 1
+        let direction = ray.direction().normalized();
 
-        // Create a new ray from the hit point, to
-        // a random point inside unit sphere at (hit point + normal)
-        // The random point is normalized, to make it true Lambertian
-        let target = hit.point + Point3::random_in_hemisphere(hit.normal_outward);
-        let diffuse_direction = target - hit.point;
-        let ray = Ray::new(hit.point, diffuse_direction);
+        // Scale direction into 0 <= t <= 1
+        let t = 0.5 * (direction.y() + 1.0);
 
-        // Return the color of the new ray, with a 50% attenuation
-        return 0.5 * ray_color(&ray, hittable, depth - 1, t_min, t_max);
+        // linear blend / linear interpolation / lerp
+        // blended = (1 - t) * start + t * end
+        let blue = Color::new(0.5, 0.7, 1.0);
+        (1.0 - t) * Color::white() + t * blue
     }
-
-    // Scale the ray direction to unit length -1 <= direction.y <= 1
-    let direction = ray.direction().normalized();
-
-    // Scale direction into 0 <= t <= 1
-    let t = 0.5 * (direction.y() + 1.0);
-
-    // linear blend / linear interpolation / lerp
-    // blended = (1 - t) * start + t * end
-    let blue = Color::new(0.5, 0.7, 1.0);
-    (1.0 - t) * Color::white() + t * blue
 }

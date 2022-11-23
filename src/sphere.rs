@@ -1,14 +1,21 @@
-use crate::{hit::HitRecord, Hit, Point3, Vec3};
+use std::rc::Rc;
+
+use crate::{hit::HitRecord, Hit, Material, Point3, Vec3};
 
 #[derive(Debug, Clone)]
 pub struct Sphere {
     center: Point3,
     radius: f64,
+    material: Rc<dyn Material>,
 }
 
 impl Sphere {
-    pub fn new(center: Point3, radius: f64) -> Self {
-        Self { center, radius }
+    pub fn new(center: Point3, radius: f64, material: Rc<dyn Material>) -> Self {
+        Self {
+            center,
+            radius,
+            material,
+        }
     }
 
     pub fn center(&self) -> Vec3<f64> {
@@ -68,7 +75,7 @@ impl Hit for Sphere {
         // (-b +- sqrt(dis)) / (2a) => (-h +- sqrt(dis_h)) / a
         let discriminant_s = discriminant_h.sqrt();
         let roots = [(-h - discriminant_s) / a, (-h + discriminant_s) / a];
-        
+
         // Compute the roots and find acceptable one
         let t = roots
             .into_iter()
@@ -87,6 +94,7 @@ impl Hit for Sphere {
             normal_outward,
             point,
             t,
+            material: sphere.material.clone(),
         })
     }
 }

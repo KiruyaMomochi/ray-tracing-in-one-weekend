@@ -8,6 +8,7 @@ pub struct Ray {
 
 impl Ray {
     pub fn new(origin: Point3, direction: Vec3<f64>) -> Self {
+        assert_ne!(direction.len_squared(), 0.0);
         Self { origin, direction }
     }
 
