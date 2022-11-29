@@ -1,4 +1,4 @@
-use crate::{hit::HitRecord, Color, Ray, Vec3};
+use crate::{Color, Ray, Vec3, HitRecord};
 use std::fmt::Debug;
 
 /// A material that can be hit by a ray
@@ -30,12 +30,12 @@ impl Lambertian {
 
 impl Material for Lambertian {
     fn scatter(&self, _ray: &Ray, hit_record: &HitRecord) -> Option<(Ray, Color)> {
-        let scatter_direction = hit_record.normal_outward + Vec3::random_in_sphere().normalized();
+        let scatter_direction = hit_record.normal_against_ray + Vec3::random_in_sphere().normalized();
 
         // scatter_direction near zero may leads to infinite or NaNs, which
         // may cause problems later on. So we need to handle this case.
         let direction = if scatter_direction.near_zero() {
-            hit_record.normal_outward
+            hit_record.normal_against_ray
         } else {
             scatter_direction
         };
@@ -63,16 +63,57 @@ impl Material for Metal {
     fn scatter(&self, ray: &Ray, hit_record: &HitRecord) -> Option<(Ray, Color)> {
         let reflected = ray
             .direction()
-            .reflect(hit_record.normal_outward)
+            .reflect(hit_record.normal_against_ray)
             .normalized();
         let direction = reflected + self.fuzziness * Vec3::random_in_sphere();
         let scattered = Ray::new(hit_record.point, direction);
 
         // if the ray is reflected towards the surface, then we scatter it
-        if scattered.direction().dot(hit_record.normal_outward) > 0.0 {
+        if scattered.direction().dot(hit_record.normal_against_ray) > 0.0 {
             Some((scattered, self.albedo))
         } else {
             None
         }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Dielectric {
+    index_of_refraction: f64,
+}
+
+impl Dielectric {
+    pub fn new(index_of_refraction: f64) -> Self {
+        Self {
+            index_of_refraction,
+        }
+    }
+}
+
+impl Material for Dielectric {
+    fn scatter(&self, ray: &Ray, hit_record: &HitRecord) -> Option<(Ray, Color)> {
+        let refraction_ratio = if hit_record.front() {
+            1.0 / self.index_of_refraction
+        } else {
+            self.index_of_refraction / 1.0
+        };
+        
+        let unit_direction = ray.direction().normalized();
+        // `theta` is the angle from the normal
+        // TODO: normal_outward or normal_rayward
+        let cos_theta = (-unit_direction).dot(hit_record.normal_against_ray).min(1.0);
+        let sin_theta = (1.0 - cos_theta.powi(2)).sqrt();
+
+        let direction = if refraction_ratio * sin_theta > 1.0 {
+            // Refraction is not possible, must reflect
+            unit_direction.reflect(hit_record.normal_against_ray)
+        } else {
+            unit_direction.refract(hit_record.normal_against_ray, refraction_ratio)
+        };     
+
+        let scattered = Ray::new(hit_record.point, direction);
+
+        // attenuation is always 1 as the glass surface absorbs nothing
+        Some((scattered, Color::white()))
     }
 }

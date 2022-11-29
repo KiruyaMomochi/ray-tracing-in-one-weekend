@@ -152,8 +152,29 @@ impl Vec3<f64> {
         self.0.iter().all(|&x| x.abs() < EPSILON)
     }
 
+    /// Reflects the vector about a `normal`.
+    /// The reflect vector is v + 2 b, where b is the projection of v onto
+    /// the normal.
     pub fn reflect(self, normal: Self) -> Self {
         self - 2.0 * self.dot(normal) * normal
+    }
+
+    /// Refracts the vector through a `normal` with a given `refraction_ratio`.
+    /// The refracted vector is computed using Snell's law.
+    ///
+    /// The refraction ratio, or eta ratio,
+    /// is the ratio of the indices of refraction of the two
+    /// media. For example, if the vector is in air and the normal is in glass,
+    /// the eta ratio is 1.0 / 1.5.
+    pub fn refract(self, normal: Self, refraction_ratio: f64) -> Self {
+        // assume that the vector and normal are normalized
+        assert!(self.near_zero() || (self.len() - 1.0).abs() < EPSILON);
+        assert!(normal.near_zero() || (normal.len() - 1.0).abs() < EPSILON);
+        // cos(theta) is the dot product of the vector and the normal
+        let cos_theta = (-self).dot(normal).min(1.0);
+        let r_out_perpendicular = refraction_ratio * (self + cos_theta * normal);
+        let r_out_parallel = -(1.0 - r_out_perpendicular.len_squared()).abs().sqrt() * normal;
+        r_out_perpendicular + r_out_parallel
     }
 }
 

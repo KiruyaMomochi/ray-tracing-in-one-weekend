@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use crate::{hit::HitRecord, Hit, Material, Point3, Vec3};
+use crate::{hit::OutwardHitRecord, Hit, Material, Point3, Vec3, HitRecord};
 
 #[derive(Debug, Clone)]
 pub struct Sphere {
@@ -47,7 +47,7 @@ impl Hit for Sphere {
     ///
     ///     (b.b) t^2 + (2b.(A-C)) t + ((A-C).(A-C) - r^2) = 0
     ///
-    fn hit(&self, ray: &crate::Ray, t_min: f64, t_max: f64) -> Option<crate::hit::HitRecord> {
+    fn hit(&self, ray: &crate::Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let sphere = self;
 
         // oc is (A - C)
@@ -90,11 +90,6 @@ impl Hit for Sphere {
         //     println!("point: {}, normal: {}", point, normal);
         // }
 
-        Some(HitRecord {
-            normal_outward,
-            point,
-            t,
-            material: sphere.material.clone(),
-        })
+        Some(OutwardHitRecord::new(point, ray, normal_outward, t, self.material.clone()).into_against_ray())
     }
 }

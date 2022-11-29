@@ -1,4 +1,4 @@
-use crate::Hit;
+use crate::{Hit, HitRecord};
 
 // Vec<Box<dyn trait>> has an implict 'static lifetime
 // https://stackoverflow.com/questions/70717050/why-do-i-need-static-lifetime-here-and-how-to-fix-it
@@ -22,7 +22,7 @@ impl Default for World {
 }
 
 impl Hit for World {
-    fn hit(&self, ray: &crate::Ray, t_min: f64, t_max: f64) -> Option<crate::hit::HitRecord> {
+    fn hit(&self, ray: &crate::Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         // https://doc.rust-lang.org/std/primitive.slice.html#method.sort_by
         self.0
             .iter()

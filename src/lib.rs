@@ -15,6 +15,7 @@ pub use ray::Ray;
 pub use sphere::Sphere;
 pub use vec3::{Color, Point3, Vec3};
 pub use world::World;
+pub type HitRecord = hit::AgainstRayHitRecord;
 
 use std::{error::Error, io::Write};
 

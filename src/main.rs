@@ -1,5 +1,5 @@
 use ray_tracing_in_one_weekend::{
-    material::{Lambertian, Metal}, Camera, Color, Point3, RayTracer, Sphere, World,
+    material::{Lambertian, Metal, Dielectric}, Camera, Color, Point3, RayTracer, Sphere, World,
 };
 use std::{error::Error, fs, io::BufWriter, rc::Rc};
 
@@ -14,9 +14,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut world = World::new();
 
     let mat_ground = Lambertian::new(Color::new(0.8, 0.8, 0.0));
-    let mat_center = Lambertian::new(Color::new(0.7, 0.3, 0.3));
-    let mat_left = Metal::new(Color::new(0.8, 0.8, 0.8), 0.3);
-    let mat_right = Metal::new(Color::new(0.8, 0.6, 0.2), 1.0);
+    let mat_center = Lambertian::new(Color::new(0.1, 0.2, 0.5));
+    let mat_left = Dielectric::new(1.5);
+    let mat_right = Metal::new(Color::new(0.8, 0.6, 0.2), 0.0);
 
     let sphere_ground = Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0, Rc::new(mat_ground));
     let sphere_center = Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5, Rc::new(mat_center));
