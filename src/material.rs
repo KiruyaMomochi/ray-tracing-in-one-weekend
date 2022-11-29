@@ -1,4 +1,4 @@
-use crate::{Color, Ray, Vec3, HitRecord};
+use crate::{Color, HitRecord, Ray, Vec3};
 use std::fmt::Debug;
 
 /// A material that can be hit by a ray
@@ -30,7 +30,8 @@ impl Lambertian {
 
 impl Material for Lambertian {
     fn scatter(&self, _ray: &Ray, hit_record: &HitRecord) -> Option<(Ray, Color)> {
-        let scatter_direction = hit_record.normal_against_ray + Vec3::random_in_sphere().normalized();
+        let scatter_direction =
+            hit_record.normal_against_ray + Vec3::random_in_sphere().normalized();
 
         // scatter_direction near zero may leads to infinite or NaNs, which
         // may cause problems later on. So we need to handle this case.
@@ -88,6 +89,29 @@ impl Dielectric {
             index_of_refraction,
         }
     }
+
+    /// [Schlick's approximation](https://en.wikipedia.org/wiki/Schlick%27s_approximation) for reflectance
+    /// of a dielectric material.
+    ///
+    /// The specular reflection coefficient $R$ is given by:
+    /// ```math
+    /// R(\theta) = R_0 + (1 - R_0)(1 - \cos \theta)^5
+    /// ```
+    /// where
+    /// ```
+    /// R_0 = \frac{(n_1 - n_2)^2}{(n_1 + n_2)^2}
+    /// ```
+    /// and $\theta$ is the angle between the incident ray and the normal.
+    /// And $n_1$ and $n_2$ are the indices of refraction of the two media.
+    /// In our case one of the interfaces is air, so $n_1 = 1$.
+    ///
+    /// # Arguments
+    /// * `cosine` - cosine of the angle between the incident ray and the normal
+    /// * `index_of_refraction` - index of refraction of the material
+    fn reflectance(cosine: f64, index_of_refraction: f64) -> f64 {
+        let r0 = ((1.0 - index_of_refraction) / (1.0 + index_of_refraction)).powi(2);
+        r0 + (1.0 - r0) * (1.0 - cosine).powi(5)
+    }
 }
 
 impl Material for Dielectric {
@@ -97,19 +121,26 @@ impl Material for Dielectric {
         } else {
             self.index_of_refraction / 1.0
         };
-        
+
         let unit_direction = ray.direction().normalized();
         // `theta` is the angle from the normal
         // TODO: normal_outward or normal_rayward
-        let cos_theta = (-unit_direction).dot(hit_record.normal_against_ray).min(1.0);
+        let cos_theta = (-unit_direction)
+            .dot(hit_record.normal_against_ray)
+            .min(1.0);
         let sin_theta = (1.0 - cos_theta.powi(2)).sqrt();
 
-        let direction = if refraction_ratio * sin_theta > 1.0 {
+        let cannot_refract = refraction_ratio * sin_theta > 1.0;
+        // TODO: or refraction_ratio?
+        let will_reflect =
+            rand::random::<f64>() < Self::reflectance(cos_theta, self.index_of_refraction);
+
+        let direction = if cannot_refract || will_reflect {
             // Refraction is not possible, must reflect
             unit_direction.reflect(hit_record.normal_against_ray)
         } else {
             unit_direction.refract(hit_record.normal_against_ray, refraction_ratio)
-        };     
+        };
 
         let scattered = Ray::new(hit_record.point, direction);
 
