@@ -2,11 +2,13 @@ use std::fmt::Display;
 
 use crate::{Point3, Vec3, Ray};
 
+const FOCAL_LENGTH: f64 = 1.0;
+
 /// Simple camera
 #[derive(Debug, Clone)]
 pub struct Camera {
     origin: Point3,
-    /// lower left corner of the viewport
+    /// Lower left corner of the viewport
     lower_left_corner: Point3,
     /// x-asis
     horizontal: Vec3<f64>,
@@ -17,11 +19,30 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(viewport_height: f64, aspect_ratio: f64, focal_length: f64) -> Self {
-        // Virtual viewport to pass scene rays
+    /// Creates a new [`Camera`] with the given aspect ratio.
+    /// 
+    /// ![Camera viewing geometry](https://raytracing.github.io/images/fig-1.14-cam-view-geom.jpg)
+    /// 
+    /// As shown in the figure, rays are cast from the origin to a projection plane `z = -1`.
+    /// Viewport height is `2h` and viewport width is `2h * aspect_ratio`.
+    /// 
+    /// # Arguments
+    /// * `vertical_fov` - Vertical field of view in degrees
+    /// * `aspect_ratio` - Aspect ratio of the viewport
+    pub fn new(vertical_fov: f64, aspect_ratio: f64) -> Self {
+        // convert vertical fov to radians
+        let theta = vertical_fov.to_radians();
+        let h = (theta / 2.0).tan();
+        
+        // virtual viewport to pass scene rays
+        let viewport_height = 2.0 * h;
         let viewport_width = viewport_height * aspect_ratio;
 
-        // Origin point defaults to be (0, 0, 0)
+        // the focal length is the distance between the projection point and the image plane
+        // this may not the same as the distance between the projection point and the viewport
+        let focal_length = FOCAL_LENGTH;
+
+        // origin point defaults to be (0, 0, 0)
         let origin = Point3::zero();
 
         let horizontal = Vec3::new(viewport_width, 0.0, 0.0);
