@@ -64,6 +64,11 @@ where
     /// perpendicular to both vectors with a magnitude equal to the area of a
     /// parallelogram with the two vectors as sides.
     ///
+    /// Cross product is given by the right-hand rule and is anti-commutative,
+    /// i.e. `a x b = -b x a`.
+    /// 
+    /// ![Cross product direction](https://upload.wikimedia.org/wikipedia/commons/6/6e/Cross_product.gif)
+    ///
     /// This function implements the cross product as defined by the right-hand
     /// rule.
     ///
@@ -141,6 +146,10 @@ impl Vec3<f64> {
         ])
     }
 
+    pub fn abs(&self) -> Self {
+        Self([self[0].abs(), self[1].abs(), self[2].abs()])
+    }
+
     pub fn round(&self) -> Self {
         Self([self[0].round(), self[1].round(), self[2].round()])
     }
@@ -150,7 +159,7 @@ impl Vec3<f64> {
     }
 
     pub fn near_zero(self) -> bool {
-        self.0.iter().all(|&x| x.abs() < EPSILON)
+        self.abs().0.iter().all(|&x| x < EPSILON)
     }
 
     /// Reflects the vector about a `normal`.

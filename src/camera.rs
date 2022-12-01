@@ -1,8 +1,6 @@
 use std::fmt::Display;
 
-use crate::{Point3, Vec3, Ray};
-
-const FOCAL_LENGTH: f64 = 1.0;
+use crate::{Point3, Ray, Vec3};
 
 /// Simple camera
 #[derive(Debug, Clone)]
@@ -14,45 +12,52 @@ pub struct Camera {
     horizontal: Vec3<f64>,
     /// y-axis
     vertical: Vec3<f64>,
-    /// Distance between projection plane and projection point
-    focal_length: f64,
 }
 
 impl Camera {
     /// Creates a new [`Camera`] with the given aspect ratio.
-    /// 
-    /// ![Camera viewing geometry](https://raytracing.github.io/images/fig-1.14-cam-view-geom.jpg)
-    /// 
-    /// As shown in the figure, rays are cast from the origin to a projection plane `z = -1`.
+    ///
+    /// ![Camera view up direction](https://raytracing.github.io/images/fig-1.15-cam-view-dir.jpg)
+    ///
+    /// As shown in the figure, camera faces `look_at`, or `-w`.
+    /// Rays are cast from the origin to a projection plane `|w| = -1`.
     /// Viewport height is `2h` and viewport width is `2h * aspect_ratio`.
-    /// 
+    ///
     /// # Arguments
+    /// * `look_from` - Camera origin
+    /// * `look_at` - Point camera is looking at
+    /// * `view_up` - The up direction of the camera. We will project it onto the plane
+    /// perpendicular to `look_at` and normalize it.
     /// * `vertical_fov` - Vertical field of view in degrees
     /// * `aspect_ratio` - Aspect ratio of the viewport
-    pub fn new(vertical_fov: f64, aspect_ratio: f64) -> Self {
+    pub fn new(
+        look_from: Point3,
+        look_at: Point3,
+        view_up: Vec3<f64>,
+        vertical_field_of_view: f64,
+        aspect_ratio: f64,
+    ) -> Self {
         // convert vertical fov to radians
-        let theta = vertical_fov.to_radians();
+        let theta = vertical_field_of_view.to_radians();
         let h = (theta / 2.0).tan();
-        
+
         // virtual viewport to pass scene rays
         let viewport_height = 2.0 * h;
         let viewport_width = viewport_height * aspect_ratio;
 
-        // the focal length is the distance between the projection point and the image plane
-        // this may not the same as the distance between the projection point and the viewport
-        let focal_length = FOCAL_LENGTH;
+        // orthonormal basis (u, v, w) to define the camera coordinate system
+        let camera_w = (look_from - look_at).normalized();
+        // project view_up onto the plane orthogonal to camera_w
+        let camera_u = view_up.cross(camera_w).normalized();
+        let camera_v = camera_w.cross(camera_u);
 
-        // origin point defaults to be (0, 0, 0)
-        let origin = Point3::zero();
-
-        let horizontal = Vec3::new(viewport_width, 0.0, 0.0);
-        let vertical = Vec3::new(0.0, viewport_height, 0.0);
+        let horizontal = viewport_width * camera_u;
+        let vertical = viewport_height * camera_v;
         let lower_left_corner =
-            origin - horizontal / 2.0 - vertical / 2.0 - Vec3::new(0.0, 0.0, focal_length);
+            look_from - horizontal / 2.0 - vertical / 2.0 - camera_w;
 
         Self {
-            focal_length,
-            origin,
+            origin: look_from,
             horizontal,
             vertical,
             lower_left_corner,
@@ -61,7 +66,7 @@ impl Camera {
 
     /// Returns a ray that starts at the camera's origin and
     /// passes through the point `(u, v)` on the viewport.
-    /// 
+    ///
     /// This function is used to cast rays through the scene.
     /// `u` and `v` are the coordinates of the point on the
     /// viewport, in the range of [0.0, 1.0].
@@ -82,13 +87,12 @@ impl Display for Camera {
         write!(
             f,
             "Camera {{
-    focal: {:.2},
     origin: [{}],
     horizontal: [{}]
     vertical: {},
     lower left corner: {}
 }}",
-            self.focal_length, self.origin, self.horizontal, self.vertical, self.lower_left_corner
+            self.origin, self.horizontal, self.vertical, self.lower_left_corner
         )
     }
 }
