@@ -48,6 +48,30 @@ impl<T: Copy> Vec3<T> {
     pub fn b(&self) -> T {
         self[2]
     }
+
+    pub fn apply<F: Fn(T) -> T>(&self, f: F) -> Self {
+        Self::new(f(self.x()), f(self.y()), f(self.z()))
+    }
+
+    pub fn apply_binary<F: Fn(T, T) -> T>(&self, other: &Self, f: F) -> Self {
+        Self::new(
+            f(self.x(), other.x()),
+            f(self.y(), other.y()),
+            f(self.z(), other.z()),
+        )
+    }
+
+    pub fn apply_mut<F: Fn(&mut T)>(mut self, f: F) {
+        f(&mut self[0]);
+        f(&mut self[1]);
+        f(&mut self[2]);
+    }
+
+    pub fn apply_binary_mut<F: Fn(&mut T, &T)>(&mut self, other: &Self, f: F) {
+        f(&mut self[0], &other[0]);
+        f(&mut self[1], &other[1]);
+        f(&mut self[2], &other[2]);
+    }
 }
 
 impl<T: Copy + Default> Vec3<T> {
@@ -139,23 +163,19 @@ impl Vec3<f64> {
     }
 
     pub fn clamp(&self, min: f64, max: f64) -> Self {
-        Self([
-            self[0].clamp(min, max),
-            self[1].clamp(min, max),
-            self[2].clamp(min, max),
-        ])
+        self.apply(|x| x.clamp(min, max))
     }
 
     pub fn abs(&self) -> Self {
-        Self([self[0].abs(), self[1].abs(), self[2].abs()])
+        self.apply(|x| x.abs())
     }
 
     pub fn round(&self) -> Self {
-        Self([self[0].round(), self[1].round(), self[2].round()])
+        self.apply(|x| x.round())
     }
 
     pub fn sqrt(&self) -> Self {
-        Self([self[0].sqrt(), self[1].sqrt(), self[2].sqrt()])
+        self.apply(|x| x.sqrt())
     }
 
     pub fn near_zero(self) -> bool {
@@ -204,161 +224,117 @@ impl<T: Copy> IndexMut<usize> for Vec3<T> {
     }
 }
 
-impl<T: Copy> Add for Vec3<T>
-where
-    T: Add<Output = T>,
-{
-    type Output = Self;
+macro_rules! vec3_operator {
+    ($trait:ident, $fn:ident, $op:tt) => {
+        vec3_operator!($trait, $fn, $op, scalar);
+        vec3_operator!($trait, $fn, $op, vector);
+    };
 
-    fn add(self, rhs: Self) -> Self::Output {
-        Self::Output::new(self[0] + rhs[0], self[1] + rhs[1], self[2] + rhs[2])
-    }
+    ($trait:ident, $fn:ident, $op:tt, scalar) => {
+        impl $trait<Vec3<f64>> for f64 {
+            type Output = Vec3<f64>;
+
+            fn $fn(self, other: Vec3<f64>) -> Self::Output {
+                other $op self
+            }
+        }
+
+        impl $trait<&Vec3<f64>> for f64 {
+            type Output = Vec3<f64>;
+
+            fn $fn(self, other: &Vec3<f64>) -> Self::Output {
+                Vec3([self $op other[0], self $op other[1], self $op other[2]])
+            }
+        }
+
+        impl<T: $trait<Output = T> + Copy> $trait<T> for Vec3<T> {
+            type Output = Self;
+
+            fn $fn(self, other: T) -> Self::Output {
+                Self([self[0] $op other, self[1] $op other, self[2] $op other])
+            }
+        }
+
+        impl<T: $trait<Output = T> + Copy> $trait<T> for &Vec3<T> {
+            type Output = Vec3<T>;
+
+            fn $fn(self, other: T) -> Self::Output {
+                Vec3([self[0] $op other, self[1] $op other, self[2] $op other])
+            }
+        }
+    };
+
+    ($trait:ident, $fn:ident, $op:tt, vector) => {
+        impl<T: $trait<Output = T> + Copy> $trait for Vec3<T> {
+            type Output = Self;
+
+            fn $fn(self, other: Self) -> Self::Output {
+                Self([self[0] $op other[0], self[1] $op other[1], self[2] $op other[2]])
+            }
+        }
+
+        impl<T: $trait<Output = T> + Copy> $trait for &Vec3<T> {
+            type Output = Vec3<T>;
+
+            fn $fn(self, other: Self) -> Self::Output {
+                Vec3([self[0] $op other[0], self[1] $op other[1], self[2] $op other[2]])
+            }
+        }
+    };
 }
 
-impl<T: Copy> AddAssign for Vec3<T>
-where
-    T: AddAssign,
-{
-    fn add_assign(&mut self, rhs: Self) {
-        self[0] += rhs[0];
-        self[1] += rhs[1];
-        self[2] += rhs[2];
-    }
+macro_rules! vec3_unary_operator {
+    ($trait:ident, $fn:ident, $op:tt) => {
+        vec3_unary_operator!($trait, $fn, $op, vector);
+        vec3_unary_operator!($trait, $fn, $op, scalar);
+    };
+
+    ($trait:ident, $fn:ident, $op:tt, vector) => {
+        impl<T: Copy + $trait> $trait for Vec3<T> {
+            fn $fn(&mut self, other: Self) {
+                self[0] $op other[0];
+                self[1] $op other[1];
+                self[2] $op other[2];
+            }
+        }
+
+        impl<T: Copy + $trait> $trait for &mut Vec3<T> {
+            fn $fn(&mut self, other: Self) {
+                self[0] $op other[0];
+                self[1] $op other[1];
+                self[2] $op other[2];
+            }
+        }
+    };
+
+    ($trait:ident, $fn:ident, $op:tt, scalar) => {
+        impl<T: Copy + $trait> $trait<T> for Vec3<T> {
+            fn $fn(&mut self, other: T) {
+                self[0] $op other;
+                self[1] $op other;
+                self[2] $op other;
+            }
+        }
+
+        impl<T: Copy + $trait<T>> $trait<T> for &mut Vec3<T> {
+            fn $fn(&mut self, other: T) {
+                self[0] $op other;
+                self[1] $op other;
+                self[2] $op other;
+            }
+        }
+    };
 }
 
-impl<T: Copy> Sub for Vec3<T>
-where
-    T: Sub<Output = T>,
-{
-    type Output = Self;
+vec3_unary_operator!(AddAssign, add_assign, +=);
+vec3_unary_operator!(SubAssign, sub_assign, -=);
+vec3_unary_operator!(MulAssign, mul_assign, *=);
+vec3_unary_operator!(DivAssign, div_assign, /=);
 
-    fn sub(self, rhs: Self) -> Self::Output {
-        Self::Output::new(self[0] - rhs[0], self[1] - rhs[1], self[2] - rhs[2])
-    }
-}
-
-impl<T: Copy> SubAssign for Vec3<T>
-where
-    T: SubAssign,
-{
-    fn sub_assign(&mut self, rhs: Self) {
-        self[0] -= rhs[0];
-        self[1] -= rhs[1];
-        self[2] -= rhs[2];
-    }
-}
-
-impl<T: Copy> Add<T> for Vec3<T>
-where
-    T: Add<Output = T>,
-{
-    type Output = Self;
-
-    fn add(self, rhs: T) -> Self::Output {
-        Self::Output::new(self[0] + rhs, self[1] + rhs, self[2] + rhs)
-    }
-}
-
-impl Add<Vec3<f64>> for f64 {
-    type Output = Vec3<f64>;
-
-    fn add(self, rhs: Vec3<f64>) -> Self::Output {
-        Vec3::new(self + rhs[0], self + rhs[1], self + rhs[2])
-    }
-}
-
-impl<T: Copy> Mul<T> for Vec3<T>
-where
-    T: Mul<Output = T>,
-{
-    type Output = Self;
-
-    fn mul(self, rhs: T) -> Self::Output {
-        Self::Output::new(self[0] * rhs, self[1] * rhs, self[2] * rhs)
-    }
-}
-
-impl<T: Copy> Mul<T> for &Vec3<T>
-where
-    T: Mul<Output = T>,
-{
-    type Output = Vec3<T>;
-
-    fn mul(self, rhs: T) -> Self::Output {
-        Self::Output::new(self[0] * rhs, self[1] * rhs, self[2] * rhs)
-    }
-}
-
-impl Mul<Vec3<f64>> for f64 {
-    type Output = Vec3<f64>;
-
-    fn mul(self, rhs: Vec3<f64>) -> Self::Output {
-        Vec3::new(self * rhs[0], self * rhs[1], self * rhs[2])
-    }
-}
-
-impl Mul<&Vec3<f64>> for f64 {
-    type Output = Vec3<f64>;
-
-    fn mul(self, rhs: &Vec3<f64>) -> Self::Output {
-        Vec3::new(self * rhs[0], self * rhs[1], self * rhs[2])
-    }
-}
-
-impl<T: Copy> MulAssign<T> for Vec3<T>
-where
-    T: MulAssign,
-{
-    fn mul_assign(&mut self, rhs: T) {
-        self[0] *= rhs;
-        self[1] *= rhs;
-        self[2] *= rhs;
-    }
-}
-
-impl<T: Copy> Div<T> for Vec3<T>
-where
-    T: Div<Output = T>,
-{
-    type Output = Self;
-
-    fn div(self, rhs: T) -> Self::Output {
-        Self::Output::new(self[0] / rhs, self[1] / rhs, self[2] / rhs)
-    }
-}
-
-impl<T: Copy> DivAssign<T> for Vec3<T>
-where
-    T: DivAssign,
-{
-    fn div_assign(&mut self, rhs: T) {
-        self[0] /= rhs;
-        self[1] /= rhs;
-        self[2] /= rhs;
-    }
-}
-
-impl<T: Copy> Mul for Vec3<T>
-where
-    T: Mul<Output = T>,
-{
-    type Output = Self;
-
-    fn mul(self, rhs: Self) -> Self::Output {
-        Self::Output::new(self[0] * rhs[0], self[1] * rhs[1], self[2] * rhs[2])
-    }
-}
-
-impl<T: Copy> Mul for &Vec3<T>
-where
-    T: Mul<Output = T>,
-{
-    type Output = Vec3<T>;
-
-    fn mul(self, rhs: Self) -> Self::Output {
-        Self::Output::new(self[0] * rhs[0], self[1] * rhs[1], self[2] * rhs[2])
-    }
-}
+vec3_operator!(Add, add, +);
+vec3_operator!(Sub, sub, -);
+vec3_operator!(Mul, mul, *);
+vec3_operator!(Div, div, /);
 
 impl<T: Copy> Neg for Vec3<T>
 where
@@ -367,7 +343,7 @@ where
     type Output = Self;
 
     fn neg(self) -> Self::Output {
-        Self::Output::new(-self[0], -self[1], -self[2])
+        self.apply(|x| -x)
     }
 }
 
@@ -466,12 +442,16 @@ impl Point3 {
         if radius <= EPSILON {
             return Self::zero();
         }
-        
+
         let mut rng = rand::thread_rng();
         let range = -radius..radius;
 
         loop {
-            let v = Self::new(rng.gen_range(range.clone()), rng.gen_range(range.clone()), 0.0);
+            let v = Self::new(
+                rng.gen_range(range.clone()),
+                rng.gen_range(range.clone()),
+                0.0,
+            );
             if v.len() < 1.0 {
                 return v * radius;
             }
