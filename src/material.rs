@@ -31,7 +31,7 @@ impl Lambertian {
 impl Material for Lambertian {
     fn scatter(&self, _ray: &Ray, hit_record: &HitRecord) -> Option<(Ray, Color)> {
         let scatter_direction =
-            hit_record.normal_against_ray + Vec3::random_in_sphere().normalized();
+            hit_record.normal_against_ray + Vec3::random_in_unit_sphere().normalized();
 
         // scatter_direction near zero may leads to infinite or NaNs, which
         // may cause problems later on. So we need to handle this case.
@@ -66,7 +66,7 @@ impl Material for Metal {
             .direction()
             .reflect(hit_record.normal_against_ray)
             .normalized();
-        let direction = reflected + self.fuzziness * Vec3::random_in_sphere();
+        let direction = reflected + self.fuzziness * Vec3::random_in_unit_sphere();
         let scattered = Ray::new(hit_record.point, direction);
 
         // if the ray is reflected towards the surface, then we scatter it

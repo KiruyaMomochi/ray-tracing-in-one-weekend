@@ -35,11 +35,12 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // Camera (-1 to 1, -1 to 1, -1 to 0)
     let camera = Camera::new(
-        Point3::new(-2.0, 2.0, 1.0),
+        Point3::new(3.0, 3.0, 2.0),
         Point3::new(0.0, 0.0, -1.0),
         Vec3::new(0.0, 1.0, 0.0),
         20.0,
         ASPECT_RATIO,
+        2.0,
     );
     println!("{}", camera);
 
