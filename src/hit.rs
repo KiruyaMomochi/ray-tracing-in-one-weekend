@@ -24,7 +24,7 @@ impl OutwardHitRecord {
         t: f64,
         material: Rc<dyn Material>,
     ) -> Self {
-        let front_face = ray.direction().dot(normal_outward) < 0.0;
+        let front_face = ray.direction().dot(normal_outward) < crate::vec3::EPSILON;
         Self {
             point,
             normal_outward,
@@ -48,11 +48,7 @@ impl OutwardHitRecord {
 
     pub fn into_against_ray(self) -> AgainstRayHitRecord {
         let front_face = self.front();
-        let normal_against_ray = if front_face {
-            self.normal_outward
-        } else {
-            -self.normal_outward
-        };
+        let normal_against_ray = self.normal_against_ray();
 
         AgainstRayHitRecord {
             point: self.point,

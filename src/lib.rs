@@ -31,14 +31,14 @@ pub struct RayTracer {
 const COLOR_MAX: u8 = 255;
 
 impl RayTracer {
-    pub fn new(world: World, camera: Camera, image_height: u64, samples_per_pixel: u64) -> Self {
+    pub fn new(world: World, camera: Camera, image_height: u64, samples_per_pixel: u64, max_depth: i64) -> Self {
         Self {
             aspect_ratio: camera.aspect_ratio(),
             world,
             camera,
             image_height,
             samples_per_pixel,
-            max_depth: 5,
+            max_depth,
         }
     }
 
@@ -103,11 +103,12 @@ impl RayTracer {
 /// Background color is a simple gradient, which
 /// linearly blends white and blue depending on the height of the y coordinate.
 pub fn ray_color<T: Hit>(ray: &Ray, hittable: &T, depth: i64, t_min: f64, t_max: f64) -> Color {
-    if let Some(hit) = ray.hit(hittable, t_min, t_max) {
-        if depth <= 0 {
-            // If we've exceeded the ray bounce limit, no more light is gathered
-            Color::black()
-        } else if let Some((ray, attenuation)) = hit.material.scatter(ray, &hit) {
+    if depth <= 0 {
+        // If we've exceeded the ray bounce limit, no more light is gathered
+        Color::black()
+    }
+    else if let Some(hit) = ray.hit(hittable, t_min, t_max) {
+        if let Some((ray, attenuation)) = hit.material.scatter(ray, &hit) {
             // Return the scattered ray
             attenuation * ray_color(&ray, hittable, depth - 1, t_min, t_max)
         } else {

@@ -124,16 +124,16 @@ impl Material for Dielectric {
 
         let unit_direction = ray.direction().normalized();
         // `theta` is the angle from the normal
-        // TODO: normal_outward or normal_rayward
+        // TODO: normal_outward or normal_against_ray
         let cos_theta = (-unit_direction)
             .dot(hit_record.normal_against_ray)
             .min(1.0);
         let sin_theta = (1.0 - cos_theta.powi(2)).sqrt();
 
-        let cannot_refract = refraction_ratio * sin_theta > 1.0;
         // TODO: or refraction_ratio?
-        let will_reflect =
-            rand::random::<f64>() < Self::reflectance(cos_theta, self.index_of_refraction);
+        let reflectance = Self::reflectance(cos_theta, self.index_of_refraction);
+        let cannot_refract = refraction_ratio * sin_theta > 1.0;
+        let will_reflect = reflectance > rand::random::<f64>();
 
         let direction = if cannot_refract || will_reflect {
             // Refraction is not possible, must reflect

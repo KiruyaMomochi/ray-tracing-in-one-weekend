@@ -61,7 +61,7 @@ impl Hit for Sphere {
 
         let direction = ray.direction();
         let a = direction.len_squared();
-        let h = direction.dot(oc); // b / 2
+        let h = oc.dot(direction); // b / 2
         let c = oc.len_squared() - sphere.radius() * sphere.radius();
 
         // b^2 - 4 ac > 0 => h^2 - ac > 0 => equations has 2 roots

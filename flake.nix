@@ -16,6 +16,9 @@
             rust-analyzer
             rustc
             rustfmt
+            lldb
+            
+            viu # display image in console
           ];
           buildInputs = [ ];
           RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";

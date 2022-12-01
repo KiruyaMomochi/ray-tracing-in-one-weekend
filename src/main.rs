@@ -1,5 +1,6 @@
 use ray_tracing_in_one_weekend::{
-    material::{Lambertian, Metal, Dielectric}, Camera, Color, Point3, RayTracer, Sphere, World,
+    material::{Dielectric, Lambertian, Metal},
+    Camera, Color, Point3, RayTracer, Sphere, World,
 };
 use std::{error::Error, fs, io::BufWriter, rc::Rc};
 
@@ -9,23 +10,27 @@ fn main() -> Result<(), Box<dyn Error>> {
     const ASPECT_RATIO: f64 = 16.0 / 9.0;
     const IMAGE_HEIGHT: u64 = 255;
     const SAMPLES_PER_PIXEL: u64 = 100;
+    const MAX_DEPTH: i64 = 50;
 
     // World
     let mut world = World::new();
 
-    let mat_ground = Lambertian::new(Color::new(0.8, 0.8, 0.0));
-    let mat_center = Lambertian::new(Color::new(0.1, 0.2, 0.5));
-    let mat_left = Dielectric::new(1.5);
-    let mat_right = Metal::new(Color::new(0.8, 0.6, 0.2), 0.0);
+    let mat_ground = Rc::new(Lambertian::new(Color::new(0.8, 0.8, 0.0)));
+    let mat_center = Rc::new(Lambertian::new(Color::new(0.1, 0.2, 0.5)));
+    let mat_left = Rc::new(Dielectric::new(1.5));
+    let mat_left_inner = mat_left.clone();
+    let mat_right = Rc::new(Metal::new(Color::new(0.8, 0.6, 0.2), 0.0));
 
-    let sphere_ground = Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0, Rc::new(mat_ground));
-    let sphere_center = Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5, Rc::new(mat_center));
-    let sphere_left = Sphere::new(Point3::new(-1.0, 0.0, -1.0), 0.5, Rc::new(mat_left));
-    let sphere_right = Sphere::new(Point3::new(1.0, 0.0, -1.0), 0.5, Rc::new(mat_right));
+    let sphere_ground = Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0, mat_ground);
+    let sphere_center = Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5, mat_center);
+    let sphere_left = Sphere::new(Point3::new(-1.0, 0.0, -1.0), 0.5, mat_left);
+    let sphere_left_inner = Sphere::new(Point3::new(-1.0, 0.0, -1.0), -0.4, mat_left_inner);
+    let sphere_right = Sphere::new(Point3::new(1.0, 0.0, -1.0), 0.5, mat_right);
 
     world.add(sphere_ground);
     world.add(sphere_center);
     world.add(sphere_left);
+    world.add(sphere_left_inner);
     world.add(sphere_right);
 
     // Camera (-1 to 1, -1 to 1, -1 to 0)
@@ -34,7 +39,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let mut file = BufWriter::new(fs::File::create("image.ppm")?);
 
-    let tracer = RayTracer::new(world, camera, IMAGE_HEIGHT, SAMPLES_PER_PIXEL);
+    let tracer = RayTracer::new(world, camera, IMAGE_HEIGHT, SAMPLES_PER_PIXEL, MAX_DEPTH);
     tracer.trace(&mut file)?;
 
     Ok(())

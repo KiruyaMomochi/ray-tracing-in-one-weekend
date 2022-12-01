@@ -7,8 +7,8 @@ use std::{
 
 use rand::Rng;
 
-const COLOR_MAX: f64 = 255.0;
-const EPSILON: f64 = 1.0e-8;
+pub const COLOR_MAX: f64 = 255.0;
+pub const EPSILON: f64 = 1.0e-8;
 
 #[derive(Clone, Debug, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Vec3<T: Copy>([T; 3]);
@@ -129,6 +129,7 @@ impl Vec3<f64> {
     }
 
     pub fn normalized(self) -> Self {
+        assert!(!self.near_zero());
         self / self.len()
     }
 
@@ -173,8 +174,10 @@ impl Vec3<f64> {
         // cos(theta) is the dot product of the vector and the normal
         let cos_theta = (-self).dot(normal).min(1.0);
         let r_out_perpendicular = refraction_ratio * (self + cos_theta * normal);
-        let r_out_parallel = -(1.0 - r_out_perpendicular.len_squared()).abs().sqrt() * normal;
-        r_out_perpendicular + r_out_parallel
+        let r_out_parallel = (1.0 - r_out_perpendicular.len_squared()).abs().sqrt().neg() * normal;
+        let r_out = r_out_perpendicular + r_out_parallel;
+        assert!(r_out_parallel.dot(r_out_perpendicular).abs() < EPSILON);
+        r_out
     }
 }
 
@@ -364,7 +367,7 @@ impl<T: Copy + Display> Display for Vec3<T> {
         let precision = f.precision().unwrap_or(2);
         write!(
             f,
-            "{:.*} {:.*} {:.*}",
+            "({:.*}, {:.*}, {:.*})",
             precision, self[0], precision, self[1], precision, self[2]
         )
     }
