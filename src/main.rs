@@ -75,15 +75,15 @@ fn main() -> Result<(), Box<dyn Error>> {
     let world = random_scene();
 
     // Camera (-1 to 1, -1 to 1, -1 to 0)
-    let camera = Camera::new_focused(
-        Point3::new(13.0, 2.0, 3.0),
-        Point3::new(0.0, 0.0, 0.0),
-        Vec3::new(0.0, 1.0, 0.0),
-        10.0,
-        ASPECT_RATIO,
-        0.1,
-        10.0,
-    );
+    let camera = Camera::builder()
+        .look_from(13.0, 2.0, 3.0)
+        .look_at(0.0, 0.0, 0.0)
+        .view_up(0.0, 1.0, 0.0)
+        .vertical_field_of_view(10.0)
+        .aspect_ratio(ASPECT_RATIO)
+        .aperture(0.1)
+        .focus_distance(10.0)
+        .build();
     println!("{}", camera);
 
     let mut file = BufWriter::new(fs::File::create("image.ppm")?);
