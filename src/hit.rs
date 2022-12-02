@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::{Material, Point3, Ray, Vec3};
 
@@ -11,7 +11,7 @@ pub struct OutwardHitRecord {
     /// Distance from ray origin to hit point
     pub t: f64,
     /// Material of the object hit
-    pub material: Rc<dyn Material>,
+    pub material: Arc<dyn Material>,
     /// True if ray is outside the object
     pub front_face: bool,
 }
@@ -22,7 +22,7 @@ impl OutwardHitRecord {
         ray: &Ray,
         normal_outward: Vec3<f64>,
         t: f64,
-        material: Rc<dyn Material>,
+        material: Arc<dyn Material>,
     ) -> Self {
         let front_face = ray.direction().dot(normal_outward) < crate::vec3::EPSILON;
         Self {
@@ -69,7 +69,7 @@ pub struct AgainstRayHitRecord {
     /// Distance from ray origin to hit point
     pub t: f64,
     /// Material of the object hit
-    pub material: Rc<dyn Material>,
+    pub material: Arc<dyn Material>,
     /// True if ray is outside the object
     pub front_face: bool,
 }
@@ -88,6 +88,6 @@ impl AgainstRayHitRecord {
     }
 }
 
-pub trait Hit {
+pub trait Hit: Sync {
     fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<AgainstRayHitRecord>;
 }

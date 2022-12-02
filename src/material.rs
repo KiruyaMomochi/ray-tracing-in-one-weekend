@@ -2,9 +2,7 @@ use crate::{Color, HitRecord, Ray, Vec3};
 use std::fmt::Debug;
 
 /// A material that can be hit by a ray
-pub trait Material
-where
-    Self: Debug,
+pub trait Material: Debug + Sync + Send
 {
     /// Scatter a ray, returning the ray scattered and the attenuation of the ray.
     ///

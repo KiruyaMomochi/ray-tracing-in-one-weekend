@@ -8,7 +8,7 @@ mod world;
 
 pub use camera::Camera;
 pub use hit::Hit;
-use indicatif::ProgressBar;
+use indicatif::ParallelProgressIterator;
 pub use material::Material;
 use rand::Rng;
 pub use ray::Ray;
@@ -17,6 +17,7 @@ pub use vec3::{Color, Point3, Vec3};
 pub use world::World;
 pub type HitRecord = hit::AgainstRayHitRecord;
 
+use rayon::prelude::*;
 use std::{error::Error, io::Write};
 
 pub struct RayTracer {
@@ -31,7 +32,13 @@ pub struct RayTracer {
 const COLOR_MAX: u8 = 255;
 
 impl RayTracer {
-    pub fn new(world: World, camera: Camera, image_height: u64, samples_per_pixel: u64, max_depth: i64) -> Self {
+    pub fn new(
+        world: World,
+        camera: Camera,
+        image_height: u64,
+        samples_per_pixel: u64,
+        max_depth: i64,
+    ) -> Self {
         Self {
             aspect_ratio: camera.aspect_ratio(),
             world,
@@ -59,33 +66,38 @@ impl RayTracer {
         writeln!(buffer, "{} {}", image_width, image_height)?;
         writeln!(buffer, "{}", COLOR_MAX)?;
 
-        let bar = ProgressBar::new(image_height);
-        let mut rng = rand::thread_rng();
+        // bar.set_position(j);
+        let colors = (0..image_height)
+            .into_par_iter()
+            .progress_count(image_height)
+            .flat_map(|j| {
+                (0..image_width).into_par_iter().map(move |i| {
+                    let mut rng = rand::thread_rng();
+                    let (width, height) = (image_width as f64, image_height as f64);
+                    let (i, j) = (i as f64, height - j as f64 - 1.0);
 
-        for j in 0..image_height {
-            bar.set_position(j);
-            for i in 0..image_width {
-                let (width, height) = (image_width as f64, image_height as f64);
-                let (i, j) = (i as f64, height - j as f64 - 1.0);
+                    let mut pixel_color_sum = Color::zero();
+                    for _ in 0..samples_per_pixel {
+                        // u: left 0.0 -> 1.0 right
+                        // v: botm 0.0 -> 1.0 up
+                        // rng.gen: standard distribution, [0, 1)
+                        let u = (i + rng.gen::<f64>()) / (width - 1.0);
+                        let v = (j + rng.gen::<f64>()) / (height - 1.0);
 
-                let mut pixel_color_sum = Color::zero();
-                for _ in 0..samples_per_pixel {
-                    // u: left 0.0 -> 1.0 right
-                    // v: botm 0.0 -> 1.0 up
-                    // rng.gen: standard distribution, [0, 1)
-                    let u = (i + rng.gen::<f64>()) / (width - 1.0);
-                    let v = (j + rng.gen::<f64>()) / (height - 1.0);
+                        let ray = camera.cast(u, v);
+                        pixel_color_sum += ray_color(&ray, world, self.max_depth, t_min, t_max);
+                    }
 
-                    let ray = camera.cast(u, v);
-                    pixel_color_sum += ray_color(&ray, world, self.max_depth, t_min, t_max);
-                }
+                    pixel_color_sum / (samples_per_pixel as f64)
+                })
+            })
+            .collect::<Vec<_>>();
 
-                let pixel_color = pixel_color_sum / (samples_per_pixel as f64);
-                writeln!(buffer, "{}", pixel_color.format_color())?;
-            }
+        for pixel_color in colors {
+            // for pixel_color in colors {
+            writeln!(buffer, "{}", pixel_color.format_color())?;
+            // }
         }
-
-        bar.finish();
 
         Ok(())
     }
@@ -106,8 +118,7 @@ pub fn ray_color<T: Hit>(ray: &Ray, hittable: &T, depth: i64, t_min: f64, t_max:
     if depth <= 0 {
         // If we've exceeded the ray bounce limit, no more light is gathered
         Color::black()
-    }
-    else if let Some(hit) = ray.hit(hittable, t_min, t_max) {
+    } else if let Some(hit) = ray.hit(hittable, t_min, t_max) {
         if let Some((ray, attenuation)) = hit.material.scatter(ray, &hit) {
             // Return the scattered ray
             attenuation * ray_color(&ray, hittable, depth - 1, t_min, t_max)
