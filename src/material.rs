@@ -27,7 +27,7 @@ impl Lambertian {
 }
 
 impl Material for Lambertian {
-    fn scatter(&self, _ray: &Ray, hit_record: &HitRecord) -> Option<(Ray, Color)> {
+    fn scatter(&self, ray: &Ray, hit_record: &HitRecord) -> Option<(Ray, Color)> {
         let scatter_direction =
             hit_record.normal_against_ray + Vec3::random_in_unit_sphere().normalized();
 
@@ -38,7 +38,7 @@ impl Material for Lambertian {
         } else {
             scatter_direction
         };
-        let scattered = Ray::new(hit_record.point, direction);
+        let scattered = Ray::new(hit_record.point, direction, ray.time());
 
         Some((scattered, self.albedo))
     }
@@ -65,7 +65,7 @@ impl Material for Metal {
             .reflect(hit_record.normal_against_ray)
             .normalized();
         let direction = reflected + self.fuzziness * Vec3::random_in_unit_sphere();
-        let scattered = Ray::new(hit_record.point, direction);
+        let scattered = Ray::new(hit_record.point, direction, ray.time());
 
         // if the ray is reflected towards the surface, then we scatter it
         if scattered.direction().dot(hit_record.normal_against_ray) > 0.0 {
@@ -140,7 +140,7 @@ impl Material for Dielectric {
             unit_direction.refract(hit_record.normal_against_ray, refraction_ratio)
         };
 
-        let scattered = Ray::new(hit_record.point, direction);
+        let scattered = Ray::new(hit_record.point, direction, ray.time());
 
         // attenuation is always 1 as the glass surface absorbs nothing
         Some((scattered, Color::white()))

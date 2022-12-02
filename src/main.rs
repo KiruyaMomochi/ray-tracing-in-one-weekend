@@ -1,7 +1,7 @@
 use rand::Rng;
 use ray_tracing_in_one_weekend::{
     material::{Dielectric, Lambertian, Metal},
-    Camera, Color, Point3, RayTracer, Sphere, Vec3, World,
+    Camera, Color, Point3, RayTracer, Sphere, World,
 };
 use std::{error::Error, fs, io::BufWriter, sync::Arc};
 
@@ -67,8 +67,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Image
     // Use 16:9 aspect ratio
     const ASPECT_RATIO: f64 = 3.0 / 2.0;
-    const IMAGE_HEIGHT: u64 = 800;
-    const SAMPLES_PER_PIXEL: u64 = 500;
+    const IMAGE_HEIGHT: u64 = 400;
+    const SAMPLES_PER_PIXEL: u64 = 5;
     const MAX_DEPTH: i64 = 50;
 
     // World

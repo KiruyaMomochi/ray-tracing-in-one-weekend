@@ -8,12 +8,13 @@ use crate::{
 pub struct Ray {
     origin: Point3,
     direction: Vec3<f64>,
+    time: f64,
 }
 
 impl Ray {
-    pub fn new(origin: Point3, direction: Vec3<f64>) -> Self {
+    pub fn new(origin: Point3, direction: Vec3<f64>, time: f64) -> Self {
         assert_ne!(direction.len_squared(), 0.0);
-        Self { origin, direction }
+        Self { origin, direction, time }
     }
 
     pub fn origin(&self) -> Point3 {
@@ -22,6 +23,10 @@ impl Ray {
 
     pub fn direction(&self) -> Vec3<f64> {
         self.direction
+    }
+
+    pub fn time(&self) -> f64 {
+        self.time
     }
 
     /// Return a point along the ray at `t`.

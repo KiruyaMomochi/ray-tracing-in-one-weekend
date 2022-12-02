@@ -13,6 +13,12 @@ macro_rules! builder_methods {
             self
         }
     };
+    (@impl $name:ident: $type:ty as range) => {
+        pub fn $name(mut self, start: f64, end: f64) -> Self {
+            self.$name = start..end;
+            self
+        }
+    };
     (@impl $name:ident: $type:ty) => {
         pub fn $name(mut self, $name: $type) -> Self {
             self.$name = $name;
@@ -39,6 +45,8 @@ pub struct CameraBuilder {
     /// The distance between the projection point and the plane
     /// where everything is in perfect focus.
     focus_distance: Option<f64>,
+    /// Range of time values for the camera to generate rays
+    time_range: Range<f64>,
 }
 
 impl CameraBuilder {
@@ -51,6 +59,7 @@ impl CameraBuilder {
             aspect_ratio: 16.0 / 9.0,
             aperture: 0.0,
             focus_distance: None,
+            time_range: 0.0..1.0,
         }
     }
 
@@ -61,6 +70,7 @@ impl CameraBuilder {
         vertical_field_of_view: f64,
         aspect_ratio: f64,
         aperture: f64,
+        time_range: Range<f64> as range
     }
 
     pub fn focus_distance(mut self, focus_distance: f64) -> Self {
@@ -82,6 +92,7 @@ impl CameraBuilder {
             aspect_ratio,
             aperture,
             focus_distance,
+            time_range,
         } = self;
 
         let focus_distance = focus_distance.unwrap_or_else(|| (look_at - look_from).len());
@@ -114,6 +125,7 @@ impl CameraBuilder {
             u: camera_u,
             v: camera_v,
             lens_radius: aperture / 2.0,
+            time_range,
         }
     }
 }
