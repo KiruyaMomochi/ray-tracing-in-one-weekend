@@ -252,7 +252,7 @@ impl Vec3<f64> {
     /// Linearly interpolate between two vectors.
     /// The interpolation parameter `t` should be in the range [0, 1].
     /// 
-    /// # Parameters
+    /// # Arguments
     /// 
     /// * `t` - The interpolation parameter.
     /// * `other` - The other vector to interpolate with.
