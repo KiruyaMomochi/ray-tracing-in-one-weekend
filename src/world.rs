@@ -29,4 +29,10 @@ impl Hit for World {
             .filter_map(|object| object.hit(ray, t_min, t_max))
             .min_by(|a, b| a.t.partial_cmp(&b.t).unwrap()) // unwarp: t != NaN
     }
+
+    fn bounding_box(&self, time_from: f64, time_to: f64) -> Option<crate::AABB> {
+        self.0.iter()
+            .filter_map(|object| object.bounding_box(time_from, time_to))
+            .reduce(|a, b| a.merge(b))
+    }
 }

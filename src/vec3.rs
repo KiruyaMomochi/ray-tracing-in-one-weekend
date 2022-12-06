@@ -17,12 +17,19 @@ pub type Point3 = Vec3<f64>;
 pub type Color = Vec3<f64>;
 
 impl<T: Copy> Vec3<T> {
-    pub fn new(x: T, y: T, z: T) -> Self {
+    pub const fn new(x: T, y: T, z: T) -> Self {
         Self([x, y, z])
     }
 
     pub fn from_array(arr: [T; 3]) -> Self {
         Self(arr)
+    }
+
+    pub fn constant(value: T) -> Self
+    where
+        T: Copy + Default,
+    {
+        Self([value, value, value])
     }
 
     pub fn x(&self) -> T {
@@ -49,6 +56,14 @@ impl<T: Copy> Vec3<T> {
         self[2]
     }
 
+    pub fn into_array(self) -> [T; 3] {
+        self.0
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &T> {
+        self.0.iter()
+    }
+
     pub fn apply<F: Fn(T) -> T>(&self, f: F) -> Self {
         Self::new(f(self.x()), f(self.y()), f(self.z()))
     }
@@ -71,6 +86,15 @@ impl<T: Copy> Vec3<T> {
         f(&mut self[0], &other[0]);
         f(&mut self[1], &other[1]);
         f(&mut self[2], &other[2]);
+    }
+}
+
+impl<T: Copy> IntoIterator for Vec3<T> {
+    type Item = T;
+    type IntoIter = std::array::IntoIter<T, 3>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
     }
 }
 
@@ -180,6 +204,22 @@ impl Vec3<f64> {
 
     pub fn is_near_zero(self) -> bool {
         self.abs().0.iter().all(|&x| x < EPSILON)
+    }
+
+    pub fn max(&self, other: &Self) -> Self {
+        self.apply_binary(other, |x, y| x.max(y))
+    }
+
+    pub fn min(&self, other: &Self) -> Self {
+        self.apply_binary(other, |x, y| x.min(y))
+    }
+
+    pub fn max_component(&self) -> f64 {
+        self.0.iter().fold(f64::NEG_INFINITY, |acc, &x| acc.max(x))
+    }
+
+    pub fn min_component(&self) -> f64 {
+        self.0.iter().fold(f64::INFINITY, |acc, &x| acc.min(x))
     }
 
     /// Reflects the vector about a `normal`.

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::{hit::OutwardHitRecord, Hit, Material, Point3, Vec3, HitRecord, Ray};
+use crate::{hit::OutwardHitRecord, Hit, Material, Point3, Vec3, HitRecord, Ray, AABB};
 
 #[derive(Debug, Clone)]
 pub struct Sphere {
@@ -137,6 +137,15 @@ impl Hit for Sphere {
 
         hit(center, radius, material, ray, t_min, t_max)
     }
+
+    fn bounding_box(&self, _: f64, _: f64) -> Option<AABB> {
+        let center = self.center();
+        let offset = Vec3::constant(self.radius());
+        Some(AABB::new(
+            center - offset,
+            center + offset,
+        ))
+    }
 }
 
 impl Hit for MovingSphere {
@@ -150,5 +159,16 @@ impl Hit for MovingSphere {
         let material = self.material.clone();
 
         hit(center, radius, material, ray, t_min, t_max)
+    }
+
+    fn bounding_box(&self, time_from: f64, time_to: f64) -> Option<AABB> {
+        let center_from = self.center(time_from);
+        let center_to = self.center(time_to);
+        let offset = Vec3::constant(self.radius());
+
+        let box_from = AABB::new(center_from - offset, center_from + offset);
+        let box_to = AABB::new(center_to - offset, center_to + offset);
+
+        Some(box_from.merge(box_to))
     }
 }
