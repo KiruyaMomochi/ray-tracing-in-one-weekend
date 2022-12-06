@@ -208,6 +208,37 @@ impl Vec3<f64> {
         assert!(r_out_parallel.dot(r_out_perpendicular).abs() < EPSILON);
         r_out
     }
+
+    /// Linearly interpolate between two vectors.
+    /// The interpolation parameter `t` should be in the range [0, 1].
+    /// 
+    /// # Parameters
+    /// 
+    /// * `t` - The interpolation parameter.
+    /// * `other` - The other vector to interpolate with.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use ray_tracing_in_one_weekend::Vec3;
+    /// let a = Vec3::new(1.0, 2.0, 3.0);
+    /// let b = Vec3::new(4.0, 5.0, 6.0);
+    /// let c = Vec3::new(2.5, 3.5, 4.5);
+    /// assert_eq!(a.lerp(b, 0.5), c);
+    /// ```
+    /// 
+    /// # Panics
+    /// 
+    /// Panics if `t` is not in the range [0, 1].
+    /// ```should_panic
+    /// use ray_tracing_in_one_weekend::Vec3;
+    /// let a = Vec3::new(1.0, 2.0, 3.0);
+    /// let b = Vec3::new(4.0, 5.0, 6.0);
+    /// a.lerp(b, 1.5);
+    /// ```
+    pub fn lerp(self, other: Self, t: f64) -> Self {
+        (1.0 - t) * self + t * other
+    }
 }
 
 impl<T: Copy> Index<usize> for Vec3<T> {

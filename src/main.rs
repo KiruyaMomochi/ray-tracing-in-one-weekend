@@ -1,7 +1,7 @@
 use rand::Rng;
 use ray_tracing_in_one_weekend::{
     material::{Dielectric, Lambertian, Metal},
-    Camera, Color, Point3, RayTracer, Sphere, World,
+    Camera, Color, Point3, RayTracer, Sphere, Vec3, World,
 };
 use std::{error::Error, fs, io::BufWriter, sync::Arc};
 
@@ -22,12 +22,13 @@ fn random_scene() -> World {
                 0.2,
                 (b as f64) + rng.gen_range(0.0..0.9),
             );
+            let new_center = center + Vec3::new(0.0, rng.gen_range(0.0..0.5), 0.0);
 
             if choose_mat < 0.8 {
                 // Diffuse
                 let albedo = Color::random(0.0..1.0) * Color::random(0.0..1.0);
                 let sphere_mat = Arc::new(Lambertian::new(albedo));
-                let sphere = Sphere::new(center, 0.2, sphere_mat);
+                let sphere = Sphere::new(center, 0.2, sphere_mat).into_moving(0.0, 1.0, new_center);
 
                 world.add(sphere);
             } else if choose_mat < 0.95 {
@@ -66,9 +67,9 @@ fn random_scene() -> World {
 fn main() -> Result<(), Box<dyn Error>> {
     // Image
     // Use 16:9 aspect ratio
-    const ASPECT_RATIO: f64 = 3.0 / 2.0;
-    const IMAGE_HEIGHT: u64 = 400;
-    const SAMPLES_PER_PIXEL: u64 = 5;
+    const ASPECT_RATIO: f64 = 16.0 / 9.0;
+    const IMAGE_HEIGHT: u64 = 400 / ASPECT_RATIO as u64;
+    const SAMPLES_PER_PIXEL: u64 = 100;
     const MAX_DEPTH: i64 = 50;
 
     // World
@@ -79,7 +80,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         .look_from(13.0, 2.0, 3.0)
         .look_at(0.0, 0.0, 0.0)
         .view_up(0.0, 1.0, 0.0)
-        .vertical_field_of_view(10.0)
+        .vertical_field_of_view(20.0)
         .aspect_ratio(ASPECT_RATIO)
         .aperture(0.1)
         .focus_distance(10.0)
