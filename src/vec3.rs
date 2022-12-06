@@ -158,7 +158,7 @@ impl Vec3<f64> {
     }
 
     pub fn normalized(self) -> Self {
-        assert!(!self.near_zero());
+        assert!(!self.is_near_zero());
         self / self.len()
     }
 
@@ -178,7 +178,7 @@ impl Vec3<f64> {
         self.apply(|x| x.sqrt())
     }
 
-    pub fn near_zero(self) -> bool {
+    pub fn is_near_zero(self) -> bool {
         self.abs().0.iter().all(|&x| x < EPSILON)
     }
 
@@ -198,8 +198,8 @@ impl Vec3<f64> {
     /// the eta ratio is 1.0 / 1.5.
     pub fn refract(self, normal: Self, refraction_ratio: f64) -> Self {
         // assume that the vector and normal are normalized
-        assert!(self.near_zero() || (self.len() - 1.0).abs() < EPSILON);
-        assert!(normal.near_zero() || (normal.len() - 1.0).abs() < EPSILON);
+        assert!(self.is_near_zero() || (self.len() - 1.0).abs() < EPSILON);
+        assert!(normal.is_near_zero() || (normal.len() - 1.0).abs() < EPSILON);
         // cos(theta) is the dot product of the vector and the normal
         let cos_theta = (-self).dot(normal).min(1.0);
         let r_out_perpendicular = refraction_ratio * (self + cos_theta * normal);

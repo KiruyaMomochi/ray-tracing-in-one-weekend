@@ -75,7 +75,7 @@ pub struct AgainstRayHitRecord {
 }
 
 impl AgainstRayHitRecord {
-    pub fn front(&self) -> bool {
+    pub fn is_front(&self) -> bool {
         self.front_face
     }
 

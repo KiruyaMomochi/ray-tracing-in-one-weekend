@@ -33,7 +33,7 @@ impl Material for Lambertian {
 
         // scatter_direction near zero may leads to infinite or NaNs, which
         // may cause problems later on. So we need to handle this case.
-        let direction = if scatter_direction.near_zero() {
+        let direction = if scatter_direction.is_near_zero() {
             hit_record.normal_against_ray
         } else {
             scatter_direction
@@ -114,7 +114,7 @@ impl Dielectric {
 
 impl Material for Dielectric {
     fn scatter(&self, ray: &Ray, hit_record: &HitRecord) -> Option<(Ray, Color)> {
-        let refraction_ratio = if hit_record.front() {
+        let refraction_ratio = if hit_record.is_front() {
             1.0 / self.index_of_refraction
         } else {
             self.index_of_refraction / 1.0
