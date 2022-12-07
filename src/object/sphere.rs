@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{sync::Arc, f64::consts::PI};
 
 use crate::{hit::{OutwardHitRecord, AABB}, Hit, Material, Point3, Vec3, HitRecord, Ray};
 
@@ -7,6 +7,13 @@ pub struct Sphere {
     center: Point3,
     radius: f64,
     material: Arc<dyn Material>,
+}
+
+fn to_sphere_uv(vec: &Vec3<f64>) -> (f64, f64) {
+    let (r, theta, phi) = vec.to_spherical().into_tuple();
+    let u = phi / (2.0 * PI) / r;
+    let v = theta / PI / r;
+    (u, v)
 }
 
 impl Sphere {
@@ -106,8 +113,9 @@ fn hit(center: Point3, radius: f64, material: Arc<dyn Material>, ray: &Ray, t_mi
 
         let point = ray.at(t);
         let normal_outward = (point - center) / radius;
+        let uv = to_sphere_uv(&normal_outward);
 
-        Some(OutwardHitRecord::new(point, ray, normal_outward, t, material).into_against_ray())
+        Some(OutwardHitRecord::new(point, ray, normal_outward, t, material, uv).into_against_ray())
 }
 
 impl Hit for Sphere {

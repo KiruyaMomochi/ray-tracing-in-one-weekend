@@ -126,7 +126,7 @@ mod tests {
     use std::sync::Arc;
 
     use super::*;
-    use crate::{material::{Lambertian, Dielectric}, Color, Point3, Sphere};
+    use crate::{material::{Lambertian, Dielectric}, Point3, Sphere, texture::SolidColor};
 
     #[test]
     fn test_bvh_create() -> Result<(), Box<dyn std::error::Error>> {
@@ -134,12 +134,12 @@ mod tests {
             Box::new(Sphere::new(
                 Point3::new(0.0, 0.0, -1.0),
                 0.5,
-                Arc::new(Lambertian::new(Color::new(0.1, 0.2, 0.5))),
+                Arc::new(Lambertian::new(SolidColor::new_rgb(0.1, 0.2, 0.5))),
             )),
             Box::new(Sphere::new(
                 Point3::new(0.0, -100.5, -1.0),
                 100.0,
-                Arc::new(Lambertian::new(Color::new(0.8, 0.8, 0.0))),
+                Arc::new(Lambertian::new(SolidColor::new_rgb(0.8, 0.8, 0.0))),
             )),
             Box::new(Sphere::new(
                 Point3::new(1.0, 0.0, -1.0),

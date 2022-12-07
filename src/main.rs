@@ -1,7 +1,7 @@
 use rand::Rng;
 use ray_tracing_in_one_weekend::{
     material::{Dielectric, Lambertian, Metal},
-    Camera, Color, Point3, RayTracer, Sphere, Vec3, World,
+    Camera, Color, Point3, RayTracer, Sphere, Vec3, World, texture::SolidColor,
 };
 use std::{error::Error, fs, io::BufWriter, sync::Arc};
 
@@ -9,7 +9,7 @@ fn random_scene() -> World {
     let mut rng = rand::thread_rng();
     let mut world = World::new();
 
-    let ground_mat = Arc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
+    let ground_mat = Arc::new(Lambertian::new(SolidColor::new_rgb(0.5, 0.5, 0.5)));
     let ground_sphere = Sphere::new(Point3::new(0.0, -1000.0, 0.0), 1000.0, ground_mat);
 
     world.add(ground_sphere);
@@ -26,7 +26,7 @@ fn random_scene() -> World {
 
             if choose_mat < 0.8 {
                 // Diffuse
-                let albedo = Color::random(0.0..1.0) * Color::random(0.0..1.0);
+                let albedo = SolidColor::new(Color::random(0.0..1.0) * Color::random(0.0..1.0));
                 let sphere_mat = Arc::new(Lambertian::new(albedo));
                 let sphere = Sphere::new(center, 0.2, sphere_mat).into_moving(0.0, 1.0, new_center);
 
@@ -50,7 +50,7 @@ fn random_scene() -> World {
     }
 
     let mat1 = Arc::new(Dielectric::new(1.5));
-    let mat2 = Arc::new(Lambertian::new(Color::new(0.4, 0.2, 0.1)));
+    let mat2 = Arc::new(Lambertian::new(SolidColor::new_rgb(0.4, 0.2, 0.1)));
     let mat3 = Arc::new(Metal::new(Color::new(0.7, 0.6, 0.5), 0.0));
 
     let sphere1 = Sphere::new(Point3::new(0.0, 1.0, 0.0), 1.0, mat1);

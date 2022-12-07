@@ -1,4 +1,4 @@
-use crate::{Color, HitRecord, Ray, Vec3};
+use crate::{Color, HitRecord, Ray, Vec3, texture::Texture};
 use std::fmt::Debug;
 
 /// A material that can be hit by a ray
@@ -14,15 +14,15 @@ pub trait Material: Debug + Sync + Send
 /// Diffuse material, which can either scatter always and attenuate by its
 /// reflectance R, or it can scatter with no attenuation but absorb the
 /// fraction 1-R of the rays, or it could be a mixture of the two.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Lambertian {
-    /// The color reflected by the surface
-    albedo: Color,
+    /// The texture of the material
+    albedo: Box<dyn Texture>
 }
 
 impl Lambertian {
-    pub fn new(albedo: Color) -> Self {
-        Self { albedo }
+    pub fn new<T: Texture + 'static>(albedo: T) -> Self {
+        Self { albedo: Box::new(albedo) }
     }
 }
 
@@ -39,8 +39,9 @@ impl Material for Lambertian {
             scatter_direction
         };
         let scattered = Ray::new(hit_record.point, direction, ray.time());
+        let attenuation = self.albedo.color(hit_record.point, hit_record.u, hit_record.v);
 
-        Some((scattered, self.albedo))
+        Some((scattered, attenuation))
     }
 }
 
