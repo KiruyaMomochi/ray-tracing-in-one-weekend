@@ -104,12 +104,16 @@ impl Hit for BVH {
             .left
             .as_ref()
             .and_then(|left| left.hit(ray, t_min, t_max));
+        if left.is_some() {
+            return left;
+        }
+
         let right = self
             .right
             .as_ref()
             .and_then(|right| right.hit(ray, t_min, t_max));
-
-        left.or(right)
+        
+        right
     }
 
     fn bounding_box(&self, _: f64, _: f64) -> Option<AABB> {
