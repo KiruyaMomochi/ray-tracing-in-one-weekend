@@ -190,7 +190,7 @@ impl Vec3<f64> {
         ])
     }
 
-    pub fn unit() -> Self {
+    pub fn ones() -> Self {
         Self([1.0, 1.0, 1.0])
     }
 
@@ -535,7 +535,7 @@ impl Color {
     }
 
     pub fn white() -> Self {
-        Self::unit()
+        Self::ones()
     }
 
     pub fn black() -> Self {
