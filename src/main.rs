@@ -1,5 +1,5 @@
 use rand::Rng;
-use ray_tracing_in_one_weekend::{
+use rtweekend::{
     material::{Dielectric, Lambertian, Metal},
     texture::{Checker, SolidColor}, Color, Point3, RayTracer, Sphere, Vec3, World,
 };
@@ -8,7 +8,7 @@ use std::{error::Error, fs, io::BufWriter, sync::Arc};
 #[allow(dead_code)]
 mod scene {
     use super::*;
-    use ray_tracing_in_one_weekend::camera::CameraBuilder;
+    use rtweekend::camera::CameraBuilder;
 
     pub struct Scene {
         pub world: World,

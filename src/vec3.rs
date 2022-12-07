@@ -140,7 +140,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use ray_tracing_in_one_weekend::Vec3;
+    /// use rtweekend::Vec3;
     /// let a = Vec3::new(1.0, 0.0, 0.0);
     /// let b = Vec3::new(0.0, 1.0, 0.0);
     /// let c = Vec3::new(0.0, 0.0, 1.0);
@@ -163,7 +163,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// use ray_tracing_in_one_weekend::Vec3;
+    /// use rtweekend::Vec3;
     /// let x = Vec3::new(1.0, 2.0, 3.0);
     /// let y = Vec3::new(4.0, 5.0, 6.0);
     /// let dot = x.dot(y);
@@ -200,7 +200,7 @@ impl Vec3<f64> {
     ///
     /// # Examples
     /// ```
-    /// use ray_tracing_in_one_weekend::Vec3;
+    /// use rtweekend::Vec3;
     /// let x = Vec3::new(3.0, 4.0, 0.0);
     /// assert_eq!(x.len(), 5.0);
     /// ```
@@ -287,7 +287,7 @@ impl Vec3<f64> {
     /// # Examples
     ///
     /// ```
-    /// use ray_tracing_in_one_weekend::Vec3;
+    /// use rtweekend::Vec3;
     /// let a = Vec3::new(1.0, 2.0, 3.0);
     /// let b = Vec3::new(4.0, 5.0, 6.0);
     /// let c = Vec3::new(2.5, 3.5, 4.5);
@@ -298,7 +298,7 @@ impl Vec3<f64> {
     ///
     /// Panics if `t` is not in the range [0, 1].
     /// ```should_panic
-    /// use ray_tracing_in_one_weekend::Vec3;
+    /// use rtweekend::Vec3;
     /// let a = Vec3::new(1.0, 2.0, 3.0);
     /// let b = Vec3::new(4.0, 5.0, 6.0);
     /// a.lerp(b, 1.5);
@@ -320,7 +320,7 @@ impl Vec3<f64> {
     /// # Examples
     ///
     /// ```
-    /// use ray_tracing_in_one_weekend::Vec3;
+    /// use rtweekend::Vec3;
     /// use std::f64::consts::PI;
     ///
     /// let v = Vec3::new(-1.0, 0.0, 1.0);
@@ -348,7 +348,7 @@ impl Vec3<f64> {
     /// # Examples
     ///
     /// ```
-    /// use ray_tracing_in_one_weekend::Vec3;
+    /// use rtweekend::Vec3;
     /// use std::f64::consts::PI;
     /// const EPSILON: f64 = 1.0e-8;
     ///

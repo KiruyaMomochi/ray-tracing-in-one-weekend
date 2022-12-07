@@ -7,15 +7,15 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'ray_tracing_in_one_weekend'",
+            "name": "Debug executable 'rtweekend'",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=ray_tracing_in_one_weekend",
-                    "--package=ray_tracing_in_one_weekend"
+                    "--bin=rtweekend",
+                    "--package=rtweekend"
                 ],
                 "filter": {
-                    "name": "ray_tracing_in_one_weekend",
+                    "name": "rtweekend",
                     "kind": "bin"
                 }
             },
@@ -25,16 +25,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in executable 'ray_tracing_in_one_weekend'",
+            "name": "Debug unit tests in executable 'rtweekend'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
-                    "--bin=ray_tracing_in_one_weekend",
-                    "--package=ray_tracing_in_one_weekend"
+                    "--bin=rtweekend",
+                    "--package=rtweekend"
                 ],
                 "filter": {
-                    "name": "ray_tracing_in_one_weekend",
+                    "name": "rtweekend",
                     "kind": "bin"
                 }
             },
