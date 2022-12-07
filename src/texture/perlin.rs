@@ -20,10 +20,10 @@ pub struct Perlin {
 }
 
 fn corner_iterator() -> impl Iterator<Item = (usize, usize, usize)> {
-    (0..2 as usize).into_iter().flat_map(move |i| {
-        (0..2 as usize)
+    (0..2_usize).into_iter().flat_map(move |i| {
+        (0..2_usize)
             .into_iter()
-            .flat_map(move |j| (0..2 as usize).into_iter().map(move |k| (i, j, k)))
+            .flat_map(move |j| (0..2_usize).into_iter().map(move |k| (i, j, k)))
     })
 }
 
@@ -72,7 +72,9 @@ impl Perlin {
     pub fn noise(&self, point: &Point3) -> f64 {
         assert!(Self::POINT_COUNT.is_power_of_two());
 
-        let intermediate = point.apply(|x| x - x.floor());
+        let intermediate = point
+            .apply(|x| x - x.floor())
+            .apply(|x| x * x * (3.0 - 2.0 * x)); // Hermite cubic, smoothstep
         self.trilinear_interpolation(point, intermediate)
     }
 }
