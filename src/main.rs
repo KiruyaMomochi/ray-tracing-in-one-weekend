@@ -1,7 +1,8 @@
 use rand::Rng;
 use ray_tracing_in_one_weekend::{
     material::{Dielectric, Lambertian, Metal},
-    Camera, Color, Point3, RayTracer, Sphere, Vec3, World, texture::SolidColor,
+    texture::{Checker, SolidColor},
+    Camera, Color, Point3, RayTracer, Sphere, Vec3, World,
 };
 use std::{error::Error, fs, io::BufWriter, sync::Arc};
 
@@ -9,7 +10,10 @@ fn random_scene() -> World {
     let mut rng = rand::thread_rng();
     let mut world = World::new();
 
-    let ground_mat = Arc::new(Lambertian::new(SolidColor::new_rgb(0.5, 0.5, 0.5)));
+    let ground_mat = Arc::new(Lambertian::new(Checker::new(
+        SolidColor::new(Color::new(0.2, 0.3, 0.1)),
+        SolidColor::new(Color::new(0.9, 0.9, 0.9)),
+    )));
     let ground_sphere = Sphere::new(Point3::new(0.0, -1000.0, 0.0), 1000.0, ground_mat);
 
     world.add(ground_sphere);
