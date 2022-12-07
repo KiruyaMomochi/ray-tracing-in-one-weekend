@@ -76,7 +76,7 @@ impl RayTracer {
                     let (width, height) = (image_width as f64, image_height as f64);
                     let (i, j) = (i as f64, height - j as f64 - 1.0);
 
-                    let mut pixel_color_sum = Color::zero();
+                    let mut pixel_color_sum = Color::zeros();
                     for _ in 0..samples_per_pixel {
                         // u: left 0.0 -> 1.0 right
                         // v: botm 0.0 -> 1.0 up

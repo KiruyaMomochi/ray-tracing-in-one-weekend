@@ -116,7 +116,7 @@ impl<T: Copy> IntoIterator for Vec3<T> {
 }
 
 impl<T: Copy + Default> Vec3<T> {
-    pub fn zero() -> Self {
+    pub fn zeros() -> Self {
         Self([T::default(); 3])
     }
 }
@@ -539,7 +539,7 @@ impl Color {
     }
 
     pub fn black() -> Self {
-        Self::zero()
+        Self::zeros()
     }
 
     pub fn red() -> Self {
@@ -598,7 +598,7 @@ impl Point3 {
     /// Generate a random point in a disk of `radius` centered at the origin.
     pub fn random_in_disk(radius: f64) -> Self {
         if radius <= EPSILON {
-            return Self::zero();
+            return Self::zeros();
         }
 
         let mut rng = rand::thread_rng();
