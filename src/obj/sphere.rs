@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::{hit::OutwardHitRecord, Hit, Material, Point3, Vec3, HitRecord, Ray, AABB};
+use crate::{hit::{OutwardHitRecord, AABB}, Hit, Material, Point3, Vec3, HitRecord, Ray};
 
 #[derive(Debug, Clone)]
 pub struct Sphere {

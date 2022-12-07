@@ -1,9 +1,11 @@
-pub mod aabb;
+mod aabb;
 mod bvh;
 
 use std::sync::Arc;
+pub use bvh::BVH;
+pub use aabb::AABB;
 
-use crate::{Material, Point3, Ray, Vec3, AABB};
+use crate::{Material, Point3, Ray, Vec3};
 
 #[derive(Debug, Clone)]
 pub struct OutwardHitRecord {

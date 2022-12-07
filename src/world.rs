@@ -1,4 +1,4 @@
-use crate::{Hit, HitRecord};
+use crate::{Hit, HitRecord, hit::AABB};
 
 // Vec<Box<dyn trait>> has an implict 'static lifetime
 // https://stackoverflow.com/questions/70717050/why-do-i-need-static-lifetime-here-and-how-to-fix-it
@@ -30,7 +30,7 @@ impl Hit for World {
             .min_by(|a, b| a.t.partial_cmp(&b.t).unwrap()) // unwarp: t != NaN
     }
 
-    fn bounding_box(&self, time_from: f64, time_to: f64) -> Option<crate::AABB> {
+    fn bounding_box(&self, time_from: f64, time_to: f64) -> Option<AABB> {
         self.0.iter()
             .filter_map(|object| object.bounding_box(time_from, time_to))
             .reduce(|a, b| a.merge(b))

@@ -1,11 +1,12 @@
 use rand::Rng;
 
-use crate::{Hit, HitRecord, AABB};
+use crate::{Hit, HitRecord};
+use super::AABB;
 
 /// Bounding volume hierarchy (BVH) tree node.
 ///
 /// BVH tree is a binary tree. It can respond to the query "does this ray intersect".
-struct BVHNode {
+pub struct BVH {
     /// Bounding box of the node
     bounding_box: AABB,
     /// Left child
@@ -29,7 +30,7 @@ fn sort_objects_by_axis(objects: &mut [Box<dyn Hit>], axis: usize, time_from: f6
     })
 }
 
-impl BVHNode {
+impl BVH {
     /// Create a new BVH tree from a list of objects
     ///
     /// # Arguments
@@ -93,7 +94,7 @@ impl BVHNode {
     }
 }
 
-impl Hit for BVHNode {
+impl Hit for BVH {
     fn hit(&self, ray: &crate::Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         if !self.bounding_box.is_hit(ray, t_min, t_max) {
             return None;
@@ -111,7 +112,7 @@ impl Hit for BVHNode {
         left.or(right)
     }
 
-    fn bounding_box(&self, _: f64, _: f64) -> Option<crate::AABB> {
+    fn bounding_box(&self, _: f64, _: f64) -> Option<AABB> {
         Some(self.bounding_box)
     }
 }
@@ -143,7 +144,7 @@ mod tests {
             )),
         ];
 
-        let _ = BVHNode::new(objects, 0.0, 1.0);
+        let _ = BVH::new(objects, 0.0, 1.0);
         Ok(())
     }
 }
