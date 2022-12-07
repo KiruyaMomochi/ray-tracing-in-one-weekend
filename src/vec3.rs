@@ -69,8 +69,8 @@ impl<T: Copy> Vec3<T> {
         self.0.iter()
     }
 
-    pub fn apply<F: Fn(T) -> T>(&self, f: F) -> Self {
-        Self::new(f(self.x()), f(self.y()), f(self.z()))
+    pub fn apply<R: Copy, F: Fn(T) -> R>(&self, f: F) -> Vec3<R> {
+        Vec3::<R>::new(f(self.x()), f(self.y()), f(self.z()))
     }
 
     pub fn apply_binary<F: Fn(T, T) -> T>(&self, other: &Self, f: F) -> Self {

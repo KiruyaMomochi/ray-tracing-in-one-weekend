@@ -1,6 +1,6 @@
 use rand::{seq::SliceRandom, Rng};
 
-use crate::Point3;
+use crate::{Point3, Vec3};
 
 /// Perlin noise
 ///
@@ -17,6 +17,14 @@ pub struct Perlin {
     perm_z: Vec<usize>,
     /// Random numbers
     randoms: Vec<f64>,
+}
+
+fn corner_iterator() -> impl Iterator<Item = (usize, usize, usize)> {
+    (0..2 as usize).into_iter().flat_map(move |i| {
+        (0..2 as usize)
+            .into_iter()
+            .flat_map(move |j| (0..2 as usize).into_iter().map(move |k| (i, j, k)))
+    })
 }
 
 impl Perlin {
@@ -41,19 +49,30 @@ impl Perlin {
         }
     }
 
+    const MAX_INDEX: usize = Perlin::POINT_COUNT - 1;
+    fn trilinear_interpolation(&self, point: &Point3, intermediate: Vec3<f64>) -> f64 {
+        let floor = point.apply(|x| x.floor() as isize as usize);
+        let mut result: f64 = 0.0;
+        let interp = |t: f64, x: f64| t * x + (1.0 - t) * (1.0 - x);
+
+        for (i, j, k) in corner_iterator() {
+            let index = self.perm_x[(floor.x() + i) & Self::MAX_INDEX]
+                ^ self.perm_y[(floor.y() + j) & Self::MAX_INDEX]
+                ^ self.perm_z[(floor.z() + k) & Self::MAX_INDEX];
+            let corner = self.randoms[index];
+            result += interp(intermediate.x(), i as f64)
+                * interp(intermediate.y(), j as f64)
+                * interp(intermediate.z(), k as f64)
+                * corner;
+        }
+
+        result
+    }
+
     pub fn noise(&self, point: &Point3) -> f64 {
-        const MAX_INDEX: usize = Perlin::POINT_COUNT - 1;
         assert!(Self::POINT_COUNT.is_power_of_two());
 
-        // first convert to isize then usize to avoid overflow,
-        // which cast negative f64 -1.0 to usize 0
-        let to_index = |x: f64| ((x * 4.0) as isize as usize) & MAX_INDEX;
-
-        let x_index = to_index(point.x());
-        let y_index = to_index(point.y());
-        let z_index = to_index(point.z());
-        let random_index = self.perm_x[x_index] ^ self.perm_y[y_index] ^ self.perm_z[z_index];
-
-        self.randoms[random_index]
+        let intermediate = point.apply(|x| x - x.floor());
+        self.trilinear_interpolation(point, intermediate)
     }
 }
