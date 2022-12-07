@@ -15,18 +15,18 @@ pub trait Material: Debug + Sync + Send
 /// reflectance R, or it can scatter with no attenuation but absorb the
 /// fraction 1-R of the rays, or it could be a mixture of the two.
 #[derive(Debug)]
-pub struct Lambertian {
+pub struct Lambertian<T: Texture> {
     /// The texture of the material
-    albedo: Box<dyn Texture>
+    albedo: T,
 }
 
-impl Lambertian {
-    pub fn new<T: Texture + 'static>(albedo: T) -> Self {
-        Self { albedo: Box::new(albedo) }
+impl<T: Texture> Lambertian<T> {
+    pub fn new(albedo: T) -> Self {
+        Self { albedo }
     }
 }
 
-impl Material for Lambertian {
+impl<T: Texture> Material for Lambertian<T> {
     fn scatter(&self, ray: &Ray, hit_record: &HitRecord) -> Option<(Ray, Color)> {
         let scatter_direction =
             hit_record.normal_against_ray + Vec3::random_in_unit_sphere().normalized();
