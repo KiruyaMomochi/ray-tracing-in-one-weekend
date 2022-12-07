@@ -1,71 +1,106 @@
 use rand::Rng;
 use ray_tracing_in_one_weekend::{
     material::{Dielectric, Lambertian, Metal},
-    texture::{Checker, SolidColor},
-    Camera, Color, Point3, RayTracer, Sphere, Vec3, World,
+    texture::{Checker, SolidColor}, Color, Point3, RayTracer, Sphere, Vec3, World,
 };
 use std::{error::Error, fs, io::BufWriter, sync::Arc};
 
-fn random_scene() -> World {
-    let mut rng = rand::thread_rng();
-    let mut world = World::new();
+#[allow(dead_code)]
+mod scene {
+    use super::*;
+    use ray_tracing_in_one_weekend::camera::CameraBuilder;
 
-    let ground_mat = Arc::new(Lambertian::new(Checker::new(
-        SolidColor::new(Color::new(0.2, 0.3, 0.1)),
-        SolidColor::new(Color::new(0.9, 0.9, 0.9)),
-    )));
-    let ground_sphere = Sphere::new(Point3::new(0.0, -1000.0, 0.0), 1000.0, ground_mat);
+    pub struct Scene {
+        pub world: World,
+        pub camera_builder: CameraBuilder,
+    }
 
-    world.add(ground_sphere);
+    pub fn random_scene() -> Scene {
+        let mut rng = rand::thread_rng();
+        let mut world = World::new();
 
-    for a in -11..=11 {
-        for b in -11..=11 {
-            let choose_mat: f64 = rng.gen();
-            let center = Point3::new(
-                (a as f64) + rng.gen_range(0.0..0.9),
-                0.2,
-                (b as f64) + rng.gen_range(0.0..0.9),
-            );
-            let new_center = center + Vec3::new(0.0, rng.gen_range(0.0..0.5), 0.0);
+        let ground_mat = Arc::new(Lambertian::new(Checker::new_solids(
+            Color::new(0.2, 0.3, 0.1),
+            Color::new(0.9, 0.9, 0.9),
+        )));
+        let ground_sphere = Sphere::new(Point3::new(0.0, -1000.0, 0.0), 1000.0, ground_mat);
 
-            if choose_mat < 0.8 {
-                // Diffuse
-                let albedo = SolidColor::new(Color::random(0.0..1.0) * Color::random(0.0..1.0));
-                let sphere_mat = Arc::new(Lambertian::new(albedo));
-                let sphere = Sphere::new(center, 0.2, sphere_mat).into_moving(0.0, 1.0, new_center);
+        world.add(ground_sphere);
 
-                world.add(sphere);
-            } else if choose_mat < 0.95 {
-                // Metal
-                let albedo = Color::random(0.4..1.0);
-                let fuzz = rng.gen_range(0.0..0.5);
-                let sphere_mat = Arc::new(Metal::new(albedo, fuzz));
-                let sphere = Sphere::new(center, 0.2, sphere_mat);
+        for a in -11..=11 {
+            for b in -11..=11 {
+                let choose_mat: f64 = rng.gen();
+                let center = Point3::new(
+                    (a as f64) + rng.gen_range(0.0..0.9),
+                    0.2,
+                    (b as f64) + rng.gen_range(0.0..0.9),
+                );
+                let new_center = center + Vec3::new(0.0, rng.gen_range(0.0..0.5), 0.0);
 
-                world.add(sphere);
-            } else {
-                // Glass
-                let sphere_mat = Arc::new(Dielectric::new(1.5));
-                let sphere = Sphere::new(center, 0.2, sphere_mat);
+                if choose_mat < 0.8 {
+                    // Diffuse
+                    let albedo = SolidColor::new(Color::random(0.0..1.0) * Color::random(0.0..1.0));
+                    let sphere_mat = Arc::new(Lambertian::new(albedo));
+                    let sphere =
+                        Sphere::new(center, 0.2, sphere_mat).into_moving(0.0, 1.0, new_center);
 
-                world.add(sphere);
+                    world.add(sphere);
+                } else if choose_mat < 0.95 {
+                    // Metal
+                    let albedo = Color::random(0.4..1.0);
+                    let fuzz = rng.gen_range(0.0..0.5);
+                    let sphere_mat = Arc::new(Metal::new(albedo, fuzz));
+                    let sphere = Sphere::new(center, 0.2, sphere_mat);
+
+                    world.add(sphere);
+                } else {
+                    // Glass
+                    let sphere_mat = Arc::new(Dielectric::new(1.5));
+                    let sphere = Sphere::new(center, 0.2, sphere_mat);
+
+                    world.add(sphere);
+                }
             }
+        }
+
+        let mat1 = Arc::new(Dielectric::new(1.5));
+        let mat2 = Arc::new(Lambertian::new(SolidColor::new_rgb(0.4, 0.2, 0.1)));
+        let mat3 = Arc::new(Metal::new(Color::new(0.7, 0.6, 0.5), 0.0));
+
+        let sphere1 = Sphere::new(Point3::new(0.0, 1.0, 0.0), 1.0, mat1);
+        let sphere2 = Sphere::new(Point3::new(-4.0, 1.0, 0.0), 1.0, mat2);
+        let sphere3 = Sphere::new(Point3::new(4.0, 1.0, 0.0), 1.0, mat3);
+
+        world.add(sphere1);
+        world.add(sphere2);
+        world.add(sphere3);
+
+        Scene {
+            world,
+            camera_builder: CameraBuilder::default()
+                .look_from(13.0, 2.0, 3.0)
+                .look_at(0.0, 0.0, 0.0)
+                .vertical_field_of_view(20.0)
+                .aperture(0.1),
         }
     }
 
-    let mat1 = Arc::new(Dielectric::new(1.5));
-    let mat2 = Arc::new(Lambertian::new(SolidColor::new_rgb(0.4, 0.2, 0.1)));
-    let mat3 = Arc::new(Metal::new(Color::new(0.7, 0.6, 0.5), 0.0));
+    pub fn two_spheres() -> Scene {
+        let mut world = World::new();
 
-    let sphere1 = Sphere::new(Point3::new(0.0, 1.0, 0.0), 1.0, mat1);
-    let sphere2 = Sphere::new(Point3::new(-4.0, 1.0, 0.0), 1.0, mat2);
-    let sphere3 = Sphere::new(Point3::new(4.0, 1.0, 0.0), 1.0, mat3);
+        let checker = Checker::new_solids(Color::new(0.2, 0.3, 0.1), Color::new(0.9, 0.9, 0.9));
+        let material = Arc::new(Lambertian::new(checker));
+        world.add(Sphere::new(Point3::new(0.0, -10.0, 0.0), 10.0, material.clone()));
+        world.add(Sphere::new(Point3::new(0.0, 10.0, 0.0), 10.0, material));
 
-    world.add(sphere1);
-    world.add(sphere2);
-    world.add(sphere3);
-
-    world
+        Scene {
+            world,
+            camera_builder: CameraBuilder::default()
+                .look_from(13.0, 2.0, 3.0)
+                .look_at(0.0, 0.0, 0.0)
+                .vertical_field_of_view(20.0),
+        }
+    }
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -77,16 +112,14 @@ fn main() -> Result<(), Box<dyn Error>> {
     const MAX_DEPTH: i64 = 50;
 
     // World
-    let world = random_scene();
+    let scene = scene::two_spheres();
+    let world = scene.world;
 
     // Camera (-1 to 1, -1 to 1, -1 to 0)
-    let camera = Camera::builder()
-        .look_from(13.0, 2.0, 3.0)
-        .look_at(0.0, 0.0, 0.0)
+    let camera = scene
+        .camera_builder
         .view_up(0.0, 1.0, 0.0)
-        .vertical_field_of_view(20.0)
         .aspect_ratio(ASPECT_RATIO)
-        .aperture(0.1)
         .focus_distance(10.0)
         .build();
     println!("{}", camera);

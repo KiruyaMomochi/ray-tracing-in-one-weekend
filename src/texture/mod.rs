@@ -62,6 +62,15 @@ where
     }
 }
 
+impl Checker<SolidColor, SolidColor> {
+    pub fn new_solids(odd: Color, even: Color) -> Self {
+        Self {
+            odd: SolidColor::new(odd),
+            even: SolidColor::new(even),
+        }
+    }
+}
+
 fn sines(point: &Point3) -> f64 {
     let sines = (10.0 * point).apply(|x| x.sin());
     sines.x() * sines.y() * sines.z()

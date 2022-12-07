@@ -1,4 +1,4 @@
-mod camera;
+pub mod camera;
 pub mod hit;
 pub mod material;
 mod ray;
