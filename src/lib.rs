@@ -2,7 +2,7 @@ mod camera;
 pub mod hit;
 pub mod material;
 mod ray;
-pub mod obj;
+pub mod object;
 mod vec3;
 mod world;
 
@@ -12,7 +12,7 @@ use indicatif::ParallelProgressIterator;
 pub use material::Material;
 use rand::Rng;
 pub use ray::Ray;
-pub use obj::Sphere;
+pub use object::Sphere;
 pub use vec3::{Color, Point3, Vec3};
 pub use world::World;
 pub type HitRecord = hit::AgainstRayHitRecord;
