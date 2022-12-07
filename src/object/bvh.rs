@@ -1,7 +1,6 @@
 use rand::Rng;
 
-use crate::{Hit, HitRecord};
-use super::AABB;
+use crate::{Hit, HitRecord, hit::AABB};
 
 /// Bounding volume hierarchy (BVH) tree node.
 ///

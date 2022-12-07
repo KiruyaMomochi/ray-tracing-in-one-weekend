@@ -4,7 +4,6 @@ pub mod material;
 mod ray;
 pub mod object;
 mod vec3;
-mod world;
 pub mod texture;
 
 pub use camera::Camera;
@@ -15,7 +14,7 @@ use rand::Rng;
 pub use ray::Ray;
 pub use object::Sphere;
 pub use vec3::{Color, Point3, Vec3};
-pub use world::World;
+pub use object::World;
 pub type HitRecord = hit::AgainstRayHitRecord;
 
 use rayon::prelude::*;
