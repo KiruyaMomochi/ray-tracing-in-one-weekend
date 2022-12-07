@@ -63,7 +63,7 @@ impl Camera {
     }
 
     pub fn aspect_ratio(&self) -> f64 {
-        self.horizontal.len() / self.vertical.len()
+        self.horizontal.norm() / self.vertical.norm()
     }
 
     pub fn builder() -> CameraBuilder {

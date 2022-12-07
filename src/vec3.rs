@@ -1,4 +1,5 @@
 use std::{
+    f64::consts::PI,
     fmt::Display,
     ops::{
         Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Range, Sub, SubAssign,
@@ -58,6 +59,10 @@ impl<T: Copy> Vec3<T> {
 
     pub fn into_array(self) -> [T; 3] {
         self.0
+    }
+
+    pub fn into_tuple(self) -> (T, T, T) {
+        (self[0], self[1], self[2])
     }
 
     pub fn iter(&self) -> impl Iterator<Item = &T> {
@@ -189,13 +194,23 @@ impl Vec3<f64> {
         Self([1.0, 1.0, 1.0])
     }
 
-    pub fn len(&self) -> f64 {
+    /// The l2 norm of the vector.
+    /// It is the square root of the sum of the squares of the components.
+    /// It also equals the square root of the dot product of the vector with itself.
+    ///
+    /// # Examples
+    /// ```
+    /// use ray_tracing_in_one_weekend::Vec3;
+    /// let x = Vec3::new(3.0, 4.0, 0.0);
+    /// assert_eq!(x.len(), 5.0);
+    /// ```
+    pub fn norm(&self) -> f64 {
         self.len_squared().sqrt()
     }
 
     pub fn normalized(self) -> Self {
         assert!(!self.is_near_zero());
-        self / self.len()
+        self / self.norm()
     }
 
     pub fn clamp(&self, min: f64, max: f64) -> Self {
@@ -250,8 +265,8 @@ impl Vec3<f64> {
     /// the eta ratio is 1.0 / 1.5.
     pub fn refract(self, normal: Self, refraction_ratio: f64) -> Self {
         // assume that the vector and normal are normalized
-        assert!(self.is_near_zero() || (self.len() - 1.0).abs() < EPSILON);
-        assert!(normal.is_near_zero() || (normal.len() - 1.0).abs() < EPSILON);
+        assert!(self.is_near_zero() || (self.norm() - 1.0).abs() < EPSILON);
+        assert!(normal.is_near_zero() || (normal.norm() - 1.0).abs() < EPSILON);
         // cos(theta) is the dot product of the vector and the normal
         let cos_theta = (-self).dot(normal).min(1.0);
         let r_out_perpendicular = refraction_ratio * (self + cos_theta * normal);
@@ -263,14 +278,14 @@ impl Vec3<f64> {
 
     /// Linearly interpolate between two vectors.
     /// The interpolation parameter `t` should be in the range [0, 1].
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `t` - The interpolation parameter.
     /// * `other` - The other vector to interpolate with.
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// use ray_tracing_in_one_weekend::Vec3;
     /// let a = Vec3::new(1.0, 2.0, 3.0);
@@ -289,7 +304,67 @@ impl Vec3<f64> {
     /// a.lerp(b, 1.5);
     /// ```
     pub fn lerp(self, other: Self, t: f64) -> Self {
+        assert!((0.0..=1.0).contains(&t));
         (1.0 - t) * self + t * other
+    }
+
+    /// Converts the vector to spherical coordinates.
+    ///
+    /// # Returns
+    ///
+    /// A vector with the following components:
+    /// * `r` - The radius of the vector.
+    /// * `theta` - The polar angle of the vector.
+    /// * `phi` - The azimuthal angle of the vector.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ray_tracing_in_one_weekend::Vec3;
+    /// use std::f64::consts::PI;
+    ///
+    /// let v = Vec3::new(-1.0, 0.0, 1.0);
+    /// let (r, theta, phi) = v.to_spherical().into_tuple();
+    /// assert_eq!(r, 2.0_f64.sqrt());
+    /// assert_eq!(theta, PI / 2.0);
+    /// assert_eq!(phi, PI / 4.0);
+    /// ```
+    pub fn to_spherical(&self) -> Vec3<f64> {
+        let r = self.norm();
+        let x = self.x() / r;
+        let y = self.y() / r;
+        let z = self.z() / r;
+        let theta = (-y).acos();
+        let phi = (-z).atan2(x) + PI;
+        Vec3::new(r, theta, phi)
+    }
+
+    /// Converts the vector to rectangular coordinates.
+    ///
+    /// # Returns
+    ///
+    /// A vector with `x`, `y`, and `z` components.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ray_tracing_in_one_weekend::Vec3;
+    /// use std::f64::consts::PI;
+    /// const EPSILON: f64 = 1.0e-8;
+    ///
+    /// let v = Vec3::new(2.0_f64.sqrt(), PI / 2.0, PI / 4.0);
+    /// let (x, y, z) = v.to_rectangular().into_tuple();
+    /// assert!((x - -1.0).abs() < EPSILON);
+    /// assert!(y.abs() < EPSILON);
+    /// assert!((z - 1.0).abs() < EPSILON);
+    /// ```
+    ///
+    pub fn to_rectangular(&self) -> Vec3<f64> {
+        let (r, theta, phi) = self.into_tuple();
+        let x = -r * theta.sin() * phi.cos();
+        let y = -r * theta.cos();
+        let z = r * theta.sin() * phi.sin();
+        Vec3::new(x, y, z)
     }
 }
 
@@ -489,7 +564,7 @@ impl Point3 {
     pub fn random_in_unit_sphere() -> Self {
         loop {
             let v = Vec3::random(-1.0..1.0);
-            if v.len() < 1.0 {
+            if v.norm() < 1.0 {
                 return v;
             }
         }
@@ -514,7 +589,7 @@ impl Point3 {
 
         loop {
             let v = Self::new(rng.gen_range(-1.0..1.0), rng.gen_range(-1.0..1.0), 0.0);
-            if v.len() < 1.0 {
+            if v.norm() < 1.0 {
                 return v;
             }
         }
@@ -535,7 +610,7 @@ impl Point3 {
                 rng.gen_range(range.clone()),
                 0.0,
             );
-            if v.len() < 1.0 {
+            if v.norm() < 1.0 {
                 return v * radius;
             }
         }

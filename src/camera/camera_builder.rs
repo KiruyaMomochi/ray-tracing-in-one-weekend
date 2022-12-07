@@ -95,7 +95,7 @@ impl CameraBuilder {
             time_range,
         } = self;
 
-        let focus_distance = focus_distance.unwrap_or_else(|| (look_at - look_from).len());
+        let focus_distance = focus_distance.unwrap_or_else(|| (look_at - look_from).norm());
 
         // convert vertical fov to radians
         let theta = vertical_field_of_view.to_radians();
