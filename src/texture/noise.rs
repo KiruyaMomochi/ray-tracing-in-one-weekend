@@ -22,7 +22,7 @@ impl Noise {
 impl Texture for Noise {
     fn color(&self, point: crate::Point3, _u: f64, _v: f64) -> Color {
         let point = self.scale * point;
-        let color = (1.0 + self.perlin.noise(&point)) * 0.5;
+        let color = self.perlin.turbulence(&point, 7);
         Vec3::constant(color)
     }
 }

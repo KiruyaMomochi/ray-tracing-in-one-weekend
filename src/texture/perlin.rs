@@ -78,10 +78,27 @@ impl Perlin {
         result
     }
 
+    /// Get the noise value at a point
     pub fn noise(&self, point: &Point3) -> f64 {
         assert!(Self::POINT_COUNT.is_power_of_two());
 
         let intermediate = point.apply(|x| x - x.floor());
         self.perlin_interpolation(point, intermediate)
+    }
+
+    /// Get the turbulence value at a point, which a composite noise that has multiple
+    /// summed frenquencies
+    pub fn turbulence(&self, point: &Point3, depth: usize) -> f64 {
+        let result = (0..depth)
+            .fold((0.0, *point, 1.0), |(result, point, weight), _| {
+                (
+                    result + weight * self.noise(&point),
+                    point * 2.0,
+                    weight * 0.5,
+                )
+            })
+            .0;
+
+        result.abs()
     }
 }
