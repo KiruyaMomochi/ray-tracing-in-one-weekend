@@ -1,4 +1,4 @@
-use rand::{seq::SliceRandom, Rng};
+use rand::seq::SliceRandom;
 
 use crate::{Point3, Vec3};
 
@@ -15,8 +15,8 @@ pub struct Perlin {
     perm_x: Vec<usize>,
     perm_y: Vec<usize>,
     perm_z: Vec<usize>,
-    /// Random numbers
-    randoms: Vec<f64>,
+    /// Random vectors
+    random_vectors: Vec<Vec3<f64>>,
 }
 
 fn corner_iterator() -> impl Iterator<Item = (usize, usize, usize)> {
@@ -33,7 +33,10 @@ impl Perlin {
     pub fn new() -> Self {
         let mut rng = rand::thread_rng();
         let range = 0..Self::POINT_COUNT;
-        let randoms = range.clone().map(|_| rng.gen::<f64>()).collect();
+        let random_vectors = range
+            .clone()
+            .map(|_| Vec3::random(-1.0..1.0).normalized())
+            .collect();
 
         let mut perm = || {
             let mut vec = range.clone().collect::<Vec<_>>();
@@ -45,25 +48,31 @@ impl Perlin {
             perm_x: perm(),
             perm_y: perm(),
             perm_z: perm(),
-            randoms,
+            random_vectors,
         }
     }
 
     const MAX_INDEX: usize = Perlin::POINT_COUNT - 1;
-    fn trilinear_interpolation(&self, point: &Point3, intermediate: Vec3<f64>) -> f64 {
+    fn perlin_interpolation(&self, point: &Point3, intermediate: Vec3<f64>) -> f64 {
+        // Hermite cubic
+        let smoothed = intermediate.apply(|x| x * x * (3.0 - 2.0 * x));
+
         let floor = point.apply(|x| x.floor() as isize as usize);
-        let mut result: f64 = 0.0;
         let interp = |t: f64, x: f64| t * x + (1.0 - t) * (1.0 - x);
+
+        let mut result: f64 = 0.0;
 
         for (i, j, k) in corner_iterator() {
             let index = self.perm_x[(floor.x() + i) & Self::MAX_INDEX]
                 ^ self.perm_y[(floor.y() + j) & Self::MAX_INDEX]
                 ^ self.perm_z[(floor.z() + k) & Self::MAX_INDEX];
-            let corner = self.randoms[index];
-            result += interp(intermediate.x(), i as f64)
-                * interp(intermediate.y(), j as f64)
-                * interp(intermediate.z(), k as f64)
-                * corner;
+            let corner = self.random_vectors[index];
+            let weight = intermediate - Vec3::new(i as f64, j as f64, k as f64);
+
+            result += interp(smoothed.x(), i as f64)
+                * interp(smoothed.y(), j as f64)
+                * interp(smoothed.z(), k as f64)
+                * corner.dot(weight);
         }
 
         result
@@ -72,9 +81,7 @@ impl Perlin {
     pub fn noise(&self, point: &Point3) -> f64 {
         assert!(Self::POINT_COUNT.is_power_of_two());
 
-        let intermediate = point
-            .apply(|x| x - x.floor())
-            .apply(|x| x * x * (3.0 - 2.0 * x)); // Hermite cubic, smoothstep
-        self.trilinear_interpolation(point, intermediate)
+        let intermediate = point.apply(|x| x - x.floor());
+        self.perlin_interpolation(point, intermediate)
     }
 }

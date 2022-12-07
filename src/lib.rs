@@ -121,6 +121,7 @@ pub fn ray_color<T: Hit>(ray: &Ray, hittable: &T, depth: i64, t_min: f64, t_max:
     } else if let Some(hit) = ray.hit(hittable, t_min, t_max) {
         if let Some((ray, attenuation)) = hit.material.scatter(ray, &hit) {
             // Return the scattered ray
+            assert!(attenuation.is_valid_color(), "attenuation {} is not valid color", attenuation);
             attenuation * ray_color(&ray, hittable, depth - 1, t_min, t_max)
         } else {
             Color::black()

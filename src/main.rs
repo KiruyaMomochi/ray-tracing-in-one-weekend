@@ -110,7 +110,7 @@ mod scene {
     pub fn two_perlin_spheres() -> Scene {
         let mut world = World::new();
 
-        let perlin = Noise::new();
+        let perlin = Noise::new(4.0);
         let material = Arc::new(Lambertian::new(perlin));
         world.add(Sphere::new(
             Point3::new(0.0, -1000.0, 0.0),

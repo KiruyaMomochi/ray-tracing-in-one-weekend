@@ -6,24 +6,23 @@ use super::{perlin::Perlin, Texture};
 #[derive(Debug, Clone)]
 pub struct Noise {
     perlin: Perlin,
+    /// The scale of the noise
+    scale: f64,
 }
 
 impl Noise {
-    pub fn new() -> Self {
+    pub fn new(scale: f64) -> Self {
         Self {
             perlin: Perlin::new(),
+            scale,
         }
-    }
-}
-
-impl Default for Noise {
-    fn default() -> Self {
-        Self::new()
     }
 }
 
 impl Texture for Noise {
     fn color(&self, point: crate::Point3, _u: f64, _v: f64) -> Color {
-        Vec3::constant(self.perlin.noise(&point))
+        let point = self.scale * point;
+        let color = (1.0 + self.perlin.noise(&point)) * 0.5;
+        Vec3::constant(color)
     }
 }

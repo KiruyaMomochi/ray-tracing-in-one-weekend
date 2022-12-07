@@ -534,6 +534,10 @@ impl Color {
         )
     }
 
+    pub fn is_valid_color(&self) -> bool {
+        self.iter().all(|x| x.is_finite() && (0.0..=1.0).contains(x))
+    }
+
     pub fn white() -> Self {
         Self::ones()
     }
