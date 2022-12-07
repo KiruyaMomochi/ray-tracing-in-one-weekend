@@ -1,14 +1,15 @@
 use rand::Rng;
 use rtweekend::{
     material::{Dielectric, Lambertian, Metal},
-    texture::{Checker, SolidColor}, Color, Point3, RayTracer, Sphere, Vec3, World,
+    texture::{Checker, SolidColor},
+    Color, Point3, RayTracer, Sphere, Vec3, World,
 };
 use std::{error::Error, fs, io::BufWriter, sync::Arc};
 
 #[allow(dead_code)]
 mod scene {
     use super::*;
-    use rtweekend::camera::CameraBuilder;
+    use rtweekend::{camera::CameraBuilder, texture::Noise};
 
     pub struct Scene {
         pub world: World,
@@ -90,8 +91,33 @@ mod scene {
 
         let checker = Checker::new_solids(Color::new(0.2, 0.3, 0.1), Color::new(0.9, 0.9, 0.9));
         let material = Arc::new(Lambertian::new(checker));
-        world.add(Sphere::new(Point3::new(0.0, -10.0, 0.0), 10.0, material.clone()));
+        world.add(Sphere::new(
+            Point3::new(0.0, -10.0, 0.0),
+            10.0,
+            material.clone(),
+        ));
         world.add(Sphere::new(Point3::new(0.0, 10.0, 0.0), 10.0, material));
+
+        Scene {
+            world,
+            camera_builder: CameraBuilder::default()
+                .look_from(13.0, 2.0, 3.0)
+                .look_at(0.0, 0.0, 0.0)
+                .vertical_field_of_view(20.0),
+        }
+    }
+
+    pub fn two_perlin_spheres() -> Scene {
+        let mut world = World::new();
+
+        let perlin = Noise::new();
+        let material = Arc::new(Lambertian::new(perlin));
+        world.add(Sphere::new(
+            Point3::new(0.0, -1000.0, 0.0),
+            1000.0,
+            material.clone(),
+        ));
+        world.add(Sphere::new(Point3::new(0.0, 2.0, 0.0), 2.0, material));
 
         Scene {
             world,
@@ -112,7 +138,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     const MAX_DEPTH: i64 = 50;
 
     // World
-    let scene = scene::two_spheres();
+    let scene = scene::two_perlin_spheres();
     let world = scene.world;
 
     // Camera (-1 to 1, -1 to 1, -1 to 0)
