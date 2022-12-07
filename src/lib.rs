@@ -5,6 +5,7 @@ mod ray;
 pub mod object;
 mod vec3;
 mod world;
+pub mod texture;
 
 pub use camera::Camera;
 pub use hit::Hit;
