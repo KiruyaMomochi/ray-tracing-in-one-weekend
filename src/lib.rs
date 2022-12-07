@@ -5,7 +5,6 @@ mod ray;
 pub mod obj;
 mod vec3;
 mod world;
-mod aabb;
 
 pub use camera::Camera;
 pub use hit::Hit;
@@ -16,7 +15,7 @@ pub use ray::Ray;
 pub use obj::Sphere;
 pub use vec3::{Color, Point3, Vec3};
 pub use world::World;
-pub use aabb::AABB;
+pub use hit::aabb::AABB;
 pub type HitRecord = hit::AgainstRayHitRecord;
 
 use rayon::prelude::*;

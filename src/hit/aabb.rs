@@ -8,6 +8,7 @@ use crate::{Point3, Ray};
 /// then it might be hitting one of the 10 objects. And all we need to know is whether
 /// or not we hit it; we don’t need hit points or normals or any of that stuff that we
 /// need for an object we want to display.
+#[derive(Debug, Clone, Copy)]
 pub struct AABB {
     /// Minimum point of the AABB
     pub min: Point3,
@@ -59,5 +60,13 @@ impl AABB {
         let max = self.max.max(&other.max);
 
         Self::new(min, max)
+    }
+
+    pub fn min(&self) -> Point3 {
+        self.min
+    }
+
+    pub fn max(&self) -> Point3 {
+        self.max
     }
 }

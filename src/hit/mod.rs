@@ -1,3 +1,6 @@
+pub mod aabb;
+mod bvh;
+
 use std::sync::Arc;
 
 use crate::{Material, Point3, Ray, Vec3, AABB};
@@ -89,14 +92,14 @@ impl AgainstRayHitRecord {
 }
 
 /// Trait for objects that can be hit by a ray
-pub trait Hit: Sync {
+pub trait Hit: Sync + Send {
     /// Returns the hit record for the ray if it hits the object, otherwise None
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<AgainstRayHitRecord>;
+    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<crate::HitRecord>;
     
     /// Returns the bounding box of the object
     /// 
     /// This function returns a option because some objects do not have a bounding box,
     /// such as infinite planes. Moving objects will have a bounding box that encloses
     /// the object at all times.
-    fn bounding_box(&self, time0: f64, time1: f64) -> Option<AABB>;
+    fn bounding_box(&self, time_from: f64, time_to: f64) -> Option<AABB>;
 }

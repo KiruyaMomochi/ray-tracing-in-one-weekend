@@ -89,6 +89,18 @@ impl<T: Copy> Vec3<T> {
     }
 }
 
+impl<T: Copy> From<[T; 3]> for Vec3<T> {
+    fn from(arr: [T; 3]) -> Self {
+        Self(arr)
+    }
+}
+
+impl<T: Copy> From<(T, T, T)> for Vec3<T> {
+    fn from((x, y, z): (T, T, T)) -> Self {
+        Self([x, y, z])
+    }
+}
+
 impl<T: Copy> IntoIterator for Vec3<T> {
     type Item = T;
     type IntoIter = std::array::IntoIter<T, 3>;

@@ -10,9 +10,9 @@ pub struct Sphere {
 }
 
 impl Sphere {
-    pub fn new(center: Point3, radius: f64, material: Arc<dyn Material>) -> Self {
+    pub fn new<P: Into<Point3>>(center: P, radius: f64, material: Arc<dyn Material>) -> Self {
         Self {
-            center,
+            center: center.into(),
             radius,
             material,
         }
