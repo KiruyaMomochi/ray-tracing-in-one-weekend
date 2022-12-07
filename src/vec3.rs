@@ -278,9 +278,9 @@ impl Vec3<f64> {
     /// let c = Vec3::new(2.5, 3.5, 4.5);
     /// assert_eq!(a.lerp(b, 0.5), c);
     /// ```
-    /// 
+    ///
     /// # Panics
-    /// 
+    ///
     /// Panics if `t` is not in the range [0, 1].
     /// ```should_panic
     /// use ray_tracing_in_one_weekend::Vec3;
