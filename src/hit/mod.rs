@@ -19,6 +19,10 @@ pub struct OutwardHitRecord {
     pub material: Arc<dyn Material>,
     /// True if ray is outside the object
     pub front_face: bool,
+    /// Surface coordinates of the hit point
+    pub u: f64,
+    /// Surface coordinates of the hit point
+    pub v: f64,
 }
 
 impl OutwardHitRecord {
@@ -28,6 +32,7 @@ impl OutwardHitRecord {
         normal_outward: Vec3<f64>,
         t: f64,
         material: Arc<dyn Material>,
+        (u, v): (f64, f64),
     ) -> Self {
         let front_face = ray.direction().dot(normal_outward) < crate::vec3::EPSILON;
         Self {
@@ -36,15 +41,17 @@ impl OutwardHitRecord {
             t,
             material,
             front_face,
+            u,
+            v,
         }
     }
 
-    pub fn front(&self) -> bool {
+    pub fn is_front(&self) -> bool {
         self.front_face
     }
 
     pub fn normal_against_ray(&self) -> Vec3<f64> {
-        if self.front() {
+        if self.is_front() {
             self.normal_outward
         } else {
             -self.normal_outward
@@ -52,7 +59,7 @@ impl OutwardHitRecord {
     }
 
     pub fn into_against_ray(self) -> AgainstRayHitRecord {
-        let front_face = self.front();
+        let front_face = self.is_front();
         let normal_against_ray = self.normal_against_ray();
 
         AgainstRayHitRecord {
@@ -61,6 +68,8 @@ impl OutwardHitRecord {
             material: self.material,
             normal_against_ray,
             front_face,
+            u: self.u,
+            v: self.v,
         }
     }
 }
@@ -77,6 +86,10 @@ pub struct AgainstRayHitRecord {
     pub material: Arc<dyn Material>,
     /// True if ray is outside the object
     pub front_face: bool,
+    /// Surface coordinates of the hit point
+    pub u: f64,
+    /// Surface coordinates of the hit point
+    pub v: f64,
 }
 
 impl AgainstRayHitRecord {
