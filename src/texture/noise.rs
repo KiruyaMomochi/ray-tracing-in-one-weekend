@@ -25,6 +25,6 @@ impl Texture for Noise {
         let phase = 10.0 * self.perlin.turbulence(&point, 7);
         let value = (self.scale * point.z() + phase).sin();
         let color = 0.5 * (1.0 + value);
-        Vec3::constant(color)
+        Color::constant(color)
     }
 }

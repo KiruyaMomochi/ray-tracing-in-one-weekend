@@ -136,6 +136,6 @@ pub fn ray_color<T: Hit>(ray: &Ray, hittable: &T, depth: i64, t_min: f64, t_max:
         // linear blend / linear interpolation / lerp
         // blended = (1 - t) * start + t * end
         let blue = Color::new(0.5, 0.7, 1.0);
-        (1.0 - t) * Color::white() + t * blue
+        Color::white().lerp(blue, t)
     }
 }
