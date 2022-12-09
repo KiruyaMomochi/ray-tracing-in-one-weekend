@@ -21,6 +21,7 @@ impl Noise {
 
 impl Texture for Noise {
     fn color(&self, point: crate::Point3, _u: f64, _v: f64) -> Color {
+        // marble-like
         let phase = 10.0 * self.perlin.turbulence(&point, 7);
         let value = (self.scale * point.z() + phase).sin();
         let color = 0.5 * (1.0 + value);

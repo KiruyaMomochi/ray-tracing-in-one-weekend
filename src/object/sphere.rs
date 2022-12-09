@@ -9,8 +9,9 @@ pub struct Sphere {
     material: Arc<dyn Material>,
 }
 
-fn to_sphere_uv(vec: &Vec3<f64>) -> (f64, f64) {
-    let (r, theta, phi) = vec.to_spherical().into_tuple();
+/// Compute the surface coordinates (u, v) from hitpoint P
+fn to_sphere_uv(normal_outward: &Vec3<f64>) -> (f64, f64) {
+    let (r, theta, phi) = normal_outward.to_spherical().into_tuple();
     let u = phi / (2.0 * PI) / r;
     let v = theta / PI / r;
     (u, v)
