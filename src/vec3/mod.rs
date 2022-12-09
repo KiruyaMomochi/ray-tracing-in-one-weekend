@@ -1,21 +1,25 @@
+mod color;
+mod point3;
+
+pub use color::Color;
+pub use point3::Point3;
+
 use std::{
-    f64::consts::PI,
     fmt::Display,
     ops::{
         Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Range, Sub, SubAssign,
     },
 };
 
-use rand::Rng;
-
-pub const COLOR_MAX: f64 = 255.0;
-pub const EPSILON: f64 = 1.0e-8;
+use num::{clamp, traits::FloatConst, One};
+use rand::{
+    distributions::uniform::{SampleRange, SampleUniform},
+    Rng,
+};
 
 #[derive(Clone, Debug, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Vec3<T: Copy>([T; 3]);
 
-pub type Point3 = Vec3<f64>;
-pub type Color = Vec3<f64>;
 
 impl<T: Copy> Vec3<T> {
     pub const fn new(x: T, y: T, z: T) -> Self {
@@ -28,7 +32,7 @@ impl<T: Copy> Vec3<T> {
 
     pub fn constant(value: T) -> Self
     where
-        T: Copy + Default,
+        T: Copy,
     {
         Self([value, value, value])
     }
@@ -178,9 +182,22 @@ where
     }
 }
 
-impl Vec3<f64> {
+impl<T> Vec3<T>
+where
+    T: Copy + One,
+{
+    pub fn ones() -> Self {
+        Self::constant(T::one())
+    }
+}
+
+impl<T> Vec3<T>
+where
+    T: Copy + SampleUniform,
+    Range<T>: SampleRange<T>,
+{
     /// Generate a random vector with components in the `range`.
-    pub fn random(range: Range<f64>) -> Self {
+    pub fn random(range: Range<T>) -> Self {
         let mut rng = rand::thread_rng();
 
         Self([
@@ -189,10 +206,35 @@ impl Vec3<f64> {
             rng.gen_range(range),
         ])
     }
+}
 
-    pub fn ones() -> Self {
-        Self([1.0, 1.0, 1.0])
+impl<T> Vec3<T>
+where
+    T: Copy + PartialOrd,
+{
+    pub fn clamp(&self, min: T, max: T) -> Self {
+        self.apply(|x| clamp(x, min, max))
     }
+}
+
+// static EPSILON: T = T::epsilon() * T::from(100.0).unwrap();
+
+pub trait Float where Self: num::Float {
+    const EPSILON: Self;
+}
+
+impl Float for f64 {
+    const EPSILON: Self = 1e-10;
+}
+
+impl Float for f32 {
+    const EPSILON: Self = 1e-8;
+}
+
+impl<T> Vec3<T>
+where
+    T: Copy + Float,
+{
 
     /// The l2 norm of the vector.
     /// It is the square root of the sum of the squares of the components.
@@ -204,17 +246,13 @@ impl Vec3<f64> {
     /// let x = Vec3::new(3.0, 4.0, 0.0);
     /// assert_eq!(x.len(), 5.0);
     /// ```
-    pub fn norm(&self) -> f64 {
+    pub fn norm(&self) -> T {
         self.len_squared().sqrt()
     }
 
     pub fn normalized(self) -> Self {
         assert!(!self.is_near_zero());
         self / self.norm()
-    }
-
-    pub fn clamp(&self, min: f64, max: f64) -> Self {
-        self.apply(|x| x.clamp(min, max))
     }
 
     pub fn abs(&self) -> Self {
@@ -230,7 +268,7 @@ impl Vec3<f64> {
     }
 
     pub fn is_near_zero(self) -> bool {
-        self.abs().0.iter().all(|&x| x < EPSILON)
+        self.abs().0.iter().all(|&x| x < T::EPSILON)
     }
 
     pub fn max(&self, other: &Self) -> Self {
@@ -241,19 +279,19 @@ impl Vec3<f64> {
         self.apply_binary(other, |x, y| x.min(y))
     }
 
-    pub fn max_component(&self) -> f64 {
-        self.0.iter().fold(f64::NEG_INFINITY, |acc, &x| acc.max(x))
+    pub fn max_component(&self) -> T {
+        self.0.iter().fold(T::neg_infinity(), |acc, &x| acc.max(x))
     }
 
-    pub fn min_component(&self) -> f64 {
-        self.0.iter().fold(f64::INFINITY, |acc, &x| acc.min(x))
+    pub fn min_component(&self) -> T {
+        self.0.iter().fold(T::infinity(), |acc, &x| acc.min(x))
     }
 
     /// Reflects the vector about a `normal`.
     /// The reflect vector is v + 2 b, where b is the projection of v onto
     /// the normal.
     pub fn reflect(self, normal: Self) -> Self {
-        self - 2.0 * self.dot(normal) * normal
+        self - normal * self.dot(normal) * T::from(2.0).unwrap()
     }
 
     /// Refracts the vector through a `normal` with a given `refraction_ratio`.
@@ -263,16 +301,20 @@ impl Vec3<f64> {
     /// is the ratio of the indices of refraction of the two
     /// media. For example, if the vector is in air and the normal is in glass,
     /// the eta ratio is 1.0 / 1.5.
-    pub fn refract(self, normal: Self, refraction_ratio: f64) -> Self {
+    pub fn refract(self, normal: Self, refraction_ratio: T) -> Self {
         // assume that the vector and normal are normalized
-        assert!(self.is_near_zero() || (self.norm() - 1.0).abs() < EPSILON);
-        assert!(normal.is_near_zero() || (normal.norm() - 1.0).abs() < EPSILON);
+        assert!(self.is_near_zero() || (self.norm() - T::one()).abs() < T::EPSILON);
+        assert!(normal.is_near_zero() || (normal.norm() - T::one()).abs() < T::EPSILON);
         // cos(theta) is the dot product of the vector and the normal
-        let cos_theta = (-self).dot(normal).min(1.0);
-        let r_out_perpendicular = refraction_ratio * (self + cos_theta * normal);
-        let r_out_parallel = (1.0 - r_out_perpendicular.len_squared()).abs().sqrt().neg() * normal;
+        let cos_theta = (-self).dot(normal).min(T::one());
+        let r_out_perpendicular = (self + normal * cos_theta) * refraction_ratio;
+        let r_out_parallel = normal
+            * (T::one() - r_out_perpendicular.len_squared())
+                .abs()
+                .sqrt()
+                .neg();
         let r_out = r_out_perpendicular + r_out_parallel;
-        assert!(r_out_parallel.dot(r_out_perpendicular).abs() < EPSILON);
+        assert!(r_out_parallel.dot(r_out_perpendicular).abs() < T::EPSILON);
         r_out
     }
 
@@ -303,40 +345,9 @@ impl Vec3<f64> {
     /// let b = Vec3::new(4.0, 5.0, 6.0);
     /// a.lerp(b, 1.5);
     /// ```
-    pub fn lerp(self, other: Self, t: f64) -> Self {
-        assert!((0.0..=1.0).contains(&t));
-        (1.0 - t) * self + t * other
-    }
-
-    /// Converts the vector to spherical coordinates.
-    ///
-    /// # Returns
-    ///
-    /// A vector with the following components:
-    /// * `r` - The radius of the vector.
-    /// * `theta` - The polar angle of the vector.
-    /// * `phi` - The azimuthal angle of the vector.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rtweekend::Vec3;
-    /// use std::f64::consts::PI;
-    ///
-    /// let v = Vec3::new(-1.0, 0.0, 1.0);
-    /// let (r, theta, phi) = v.to_spherical().into_tuple();
-    /// assert_eq!(r, 2.0_f64.sqrt());
-    /// assert_eq!(theta, PI / 2.0);
-    /// assert_eq!(phi, PI / 4.0);
-    /// ```
-    pub fn to_spherical(&self) -> Vec3<f64> {
-        let r = self.norm();
-        let x = self.x() / r;
-        let y = self.y() / r;
-        let z = self.z() / r;
-        let theta = (-y).acos();
-        let phi = (-z).atan2(x) + PI;
-        Vec3::new(r, theta, phi)
+    pub fn lerp(self, other: Self, t: T) -> Self {
+        assert!((T::from(0.0).unwrap()..=T::from(1.0).unwrap()).contains(&t));
+        self * (T::one() - t) + other * t
     }
 
     /// Converts the vector to rectangular coordinates.
@@ -359,12 +370,48 @@ impl Vec3<f64> {
     /// assert!((z - 1.0).abs() < EPSILON);
     /// ```
     ///
-    pub fn to_rectangular(&self) -> Vec3<f64> {
+    pub fn to_rectangular(&self) -> Vec3<T> {
         let (r, theta, phi) = self.into_tuple();
         let x = -r * theta.sin() * phi.cos();
         let y = -r * theta.cos();
         let z = r * theta.sin() * phi.sin();
         Vec3::new(x, y, z)
+    }
+}
+
+impl<T> Vec3<T>
+where
+    T: Copy + Float + FloatConst,
+{
+    /// Converts the vector to spherical coordinates.
+    ///
+    /// # Returns
+    ///
+    /// A vector with the following components:
+    /// * `r` - The radius of the vector.
+    /// * `theta` - The polar angle of the vector.
+    /// * `phi` - The azimuthal angle of the vector.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rtweekend::Vec3;
+    /// use std::f64::consts::PI;
+    ///
+    /// let v = Vec3::new(-1.0, 0.0, 1.0);
+    /// let (r, theta, phi) = v.to_spherical().into_tuple();
+    /// assert_eq!(r, 2.0_f64.sqrt());
+    /// assert_eq!(theta, PI / 2.0);
+    /// assert_eq!(phi, PI / 4.0);
+    /// ```
+    pub fn to_spherical(&self) -> Vec3<T> {
+        let r = self.norm();
+        let x = self.x() / r;
+        let y = self.y() / r;
+        let z = self.z() / r;
+        let theta = (-y).acos();
+        let phi = (-z).atan2(x) + T::PI();
+        Vec3::new(r, theta, phi)
     }
 }
 
@@ -389,21 +436,8 @@ macro_rules! vec3_operator {
     };
 
     ($trait:ident, $fn:ident, $op:tt, scalar) => {
-        impl $trait<Vec3<f64>> for f64 {
-            type Output = Vec3<f64>;
-
-            fn $fn(self, other: Vec3<f64>) -> Self::Output {
-                other $op self
-            }
-        }
-
-        impl $trait<&Vec3<f64>> for f64 {
-            type Output = Vec3<f64>;
-
-            fn $fn(self, other: &Vec3<f64>) -> Self::Output {
-                Vec3([self $op other[0], self $op other[1], self $op other[2]])
-            }
-        }
+        vec3_operator!($trait, $fn, $op, scalar, f32);
+        vec3_operator!($trait, $fn, $op, scalar, f64);
 
         impl<T: $trait<Output = T> + Copy> $trait<T> for Vec3<T> {
             type Output = Self;
@@ -439,6 +473,24 @@ macro_rules! vec3_operator {
             }
         }
     };
+
+    ($trait:ident, $fn:ident, $op:tt, scalar, $ty:ty) => {
+        impl $trait<Vec3<$ty>> for $ty {
+            type Output = Vec3<$ty>;
+
+            fn $fn(self, other: Vec3<$ty>) -> Self::Output {
+                other $op self
+            }
+        }
+
+        impl $trait<&Vec3<$ty>> for $ty {
+            type Output = Vec3<$ty>;
+
+            fn $fn(self, other: &Vec3<$ty>) -> Self::Output {
+                Vec3([self $op other[0], self $op other[1], self $op other[2]])
+            }
+        }
+    }
 }
 
 macro_rules! vec3_unary_operator {
@@ -513,110 +565,5 @@ impl<T: Copy + Display> Display for Vec3<T> {
             "({:.*}, {:.*}, {:.*})",
             precision, self[0], precision, self[1], precision, self[2]
         )
-    }
-}
-
-impl Color {
-    /// For a given color, return the PPM color string.
-    /// The color is clamped to [0, 255], and then rounded to the nearest integer.
-    ///
-    /// # Note
-    /// - The PPM color string is of the form "R G B".
-    /// - Colors are "gamma corrected" by raising them to the power of 1/2.
-    pub fn format_color(&self) -> String {
-        let color = self;
-        let color = color.sqrt().clamp(0.0, 0.999);
-        let color = (COLOR_MAX * color).round();
-
-        format!(
-            "{} {} {}",
-            color[0] as u64, color[1] as u64, color[2] as u64
-        )
-    }
-
-    pub fn is_valid_color(&self) -> bool {
-        self.iter().all(|x| x.is_finite() && (0.0..=1.0).contains(x))
-    }
-
-    pub fn white() -> Self {
-        Self::ones()
-    }
-
-    pub fn black() -> Self {
-        Self::zeros()
-    }
-
-    pub fn red() -> Self {
-        Self::new(1.0, 0.0, 0.0)
-    }
-
-    pub fn green() -> Self {
-        Self::new(0.0, 1.0, 0.0)
-    }
-
-    pub fn blue() -> Self {
-        Self::new(0.0, 0.0, 1.0)
-    }
-}
-
-impl Point3 {
-    /// Generate a random point in a unit radius sphere centered at the origin.
-    ///
-    /// The generation uses the rejection method.
-    /// First pick a random point in a unit cube, then reject it if
-    /// it is outside the unit sphere.
-    pub fn random_in_unit_sphere() -> Self {
-        loop {
-            let v = Vec3::random(-1.0..1.0);
-            if v.norm() < 1.0 {
-                return v;
-            }
-        }
-    }
-
-    /// Generate a random point inside unit hemisphere of the given normal,
-    /// centered at the origin.
-    pub fn random_in_unit_hemisphere(normal: Vec3<f64>) -> Point3 {
-        let v = Self::random_in_unit_sphere();
-        if v.dot(normal) > 0.0 {
-            // In the same hemisphere as the normal
-            v
-        } else {
-            -v
-        }
-    }
-
-    /// Generate a random point inside unit disk on the XY plane,
-    /// centered at the origin.
-    pub fn random_in_unit_disk() -> Self {
-        let mut rng = rand::thread_rng();
-
-        loop {
-            let v = Self::new(rng.gen_range(-1.0..1.0), rng.gen_range(-1.0..1.0), 0.0);
-            if v.norm() < 1.0 {
-                return v;
-            }
-        }
-    }
-
-    /// Generate a random point in a disk of `radius` centered at the origin.
-    pub fn random_in_disk(radius: f64) -> Self {
-        if radius <= EPSILON {
-            return Self::zeros();
-        }
-
-        let mut rng = rand::thread_rng();
-        let range = -radius..radius;
-
-        loop {
-            let v = Self::new(
-                rng.gen_range(range.clone()),
-                rng.gen_range(range.clone()),
-                0.0,
-            );
-            if v.norm() < 1.0 {
-                return v * radius;
-            }
-        }
     }
 }

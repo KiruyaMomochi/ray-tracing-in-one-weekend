@@ -32,7 +32,7 @@ impl OutwardHitRecord {
         material: Arc<dyn Material>,
         (u, v): (f64, f64),
     ) -> Self {
-        let front_face = ray.direction().dot(normal_outward) < crate::vec3::EPSILON;
+        let front_face = ray.direction().dot(normal_outward) < crate::vec3::Float::EPSILON;
         Self {
             point,
             normal_outward,
