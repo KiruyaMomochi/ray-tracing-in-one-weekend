@@ -1,29 +1,29 @@
 pub mod camera;
 pub mod hit;
 pub mod material;
-mod ray;
 pub mod object;
-mod vec3;
+mod ray;
 pub mod texture;
+mod vec3;
 
 pub use camera::Camera;
 pub use hit::Hit;
 use indicatif::ParallelProgressIterator;
 pub use material::Material;
+pub use object::Sphere;
+pub use object::World;
 use rand::Rng;
 pub use ray::Ray;
-pub use object::Sphere;
 pub use vec3::{Color, Point3, Vec3};
-pub use object::World;
 pub type HitRecord = hit::AgainstRayHitRecord;
 
 use rayon::prelude::*;
 use std::{error::Error, io::Write};
 
 pub struct RayTracer {
-    aspect_ratio: f64,
-    world: World,
-    camera: Camera,
+    pub world: World,
+    pub camera: Camera,
+    pub background: Color,
     pub max_depth: i64,
     pub samples_per_pixel: u64,
     pub image_height: u64,
@@ -32,21 +32,8 @@ pub struct RayTracer {
 const COLOR_MAX: u8 = 255;
 
 impl RayTracer {
-    pub fn new(
-        world: World,
-        camera: Camera,
-        image_height: u64,
-        samples_per_pixel: u64,
-        max_depth: i64,
-    ) -> Self {
-        Self {
-            aspect_ratio: camera.aspect_ratio(),
-            world,
-            camera,
-            image_height,
-            samples_per_pixel,
-            max_depth,
-        }
+    fn aspect_ratio(&self) -> f64 {
+        self.camera.aspect_ratio()
     }
 
     pub fn trace_in<T: Write>(
@@ -57,10 +44,12 @@ impl RayTracer {
     ) -> Result<(), Box<dyn Error>> {
         let camera = &self.camera;
         let world = &self.world;
+        let background = self.background;
         let image_height = self.image_height;
         let samples_per_pixel = self.samples_per_pixel;
+        let max_depth = self.max_depth;
 
-        let image_width: u64 = (self.aspect_ratio * image_height as f64) as u64;
+        let image_width: u64 = (self.aspect_ratio() * image_height as f64) as u64;
 
         writeln!(buffer, "P3")?;
         writeln!(buffer, "{} {}", image_width, image_height)?;
@@ -85,7 +74,8 @@ impl RayTracer {
                         let v = (j + rng.gen::<f64>()) / (height - 1.0);
 
                         let ray = camera.cast(u, v);
-                        pixel_color_sum += ray_color(&ray, world, self.max_depth, t_min, t_max);
+                        pixel_color_sum +=
+                            ray_color(&ray, background, world, max_depth, t_min, t_max);
                     }
 
                     pixel_color_sum / (samples_per_pixel as f64)
@@ -114,28 +104,36 @@ impl RayTracer {
 ///
 /// Background color is a simple gradient, which
 /// linearly blends white and blue depending on the height of the y coordinate.
-pub fn ray_color<T: Hit>(ray: &Ray, hittable: &T, depth: i64, t_min: f64, t_max: f64) -> Color {
+pub fn ray_color<T: Hit>(
+    ray: &Ray,
+    background: Color,
+    object: &T,
+    depth: i64,
+    t_min: f64,
+    t_max: f64,
+) -> Color {
     if depth <= 0 {
         // If we've exceeded the ray bounce limit, no more light is gathered
         Color::black()
-    } else if let Some(hit) = ray.hit(hittable, t_min, t_max) {
-        if let Some((ray, attenuation)) = hit.material.scatter(ray, &hit) {
-            // Return the scattered ray
-            assert!(attenuation.is_valid_color(), "attenuation {} is not valid color", attenuation);
-            attenuation * ray_color(&ray, hittable, depth - 1, t_min, t_max)
+    } else if let Some(hit) = ray.hit(object, t_min, t_max) {
+        // emitted color from the object at hit point
+        let emitted = hit.material.emit(hit.u, hit.v, hit.point);
+
+        let color = if let Some((ray, attenuation)) = hit.material.scatter(ray, &hit) {
+            // the scattered ray
+            assert!(
+                attenuation.is_valid_color(),
+                "attenuation {} is not valid color",
+                attenuation
+            );
+            attenuation * ray_color(&ray, background, object, depth - 1, t_min, t_max)
         } else {
             Color::black()
-        }
+        };
+
+        emitted + color
     } else {
-        // Scale the ray direction to unit length -1 <= direction.y <= 1
-        let direction = ray.direction().normalized();
-
-        // Scale direction into 0 <= t <= 1
-        let t = 0.5 * (direction.y() + 1.0);
-
-        // linear blend / linear interpolation / lerp
-        // blended = (1 - t) * start + t * end
-        let blue = Color::new(0.5, 0.7, 1.0);
-        Color::white().lerp(blue, t)
+        // The ray hits nothing, return the background color
+        background
     }
 }

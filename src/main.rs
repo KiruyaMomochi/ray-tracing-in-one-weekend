@@ -16,6 +16,7 @@ mod scene {
 
     pub struct Scene {
         pub world: World,
+        pub background: Color,
         pub camera_builder: CameraBuilder,
     }
 
@@ -86,6 +87,7 @@ mod scene {
                 .look_at(0.0, 0.0, 0.0)
                 .vertical_field_of_view(20.0)
                 .aperture(0.1),
+            background: Color::new(0.7, 0.8, 1.0),
         }
     }
 
@@ -107,6 +109,7 @@ mod scene {
                 .look_from(13.0, 2.0, 3.0)
                 .look_at(0.0, 0.0, 0.0)
                 .vertical_field_of_view(20.0),
+            background: Color::new(0.7, 0.8, 1.0),
         }
     }
 
@@ -128,6 +131,7 @@ mod scene {
                 .look_from(13.0, 2.0, 3.0)
                 .look_at(0.0, 0.0, 0.0)
                 .vertical_field_of_view(20.0),
+            background: Color::new(0.7, 0.8, 1.0),
         }
     }
 
@@ -144,6 +148,7 @@ mod scene {
                 .look_from(13.0, 2.0, 3.0)
                 .look_at(0.0, 0.0, 0.0)
                 .vertical_field_of_view(20.0),
+            background: Color::new(0.7, 0.8, 1.0),
         }
     }
 }
@@ -159,6 +164,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     // World
     let scene = scene::earth();
     let world = scene.world;
+    let background = scene.background;
 
     // Camera (-1 to 1, -1 to 1, -1 to 0)
     let camera = scene
@@ -171,7 +177,14 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let mut file = BufWriter::new(fs::File::create("image.ppm")?);
 
-    let tracer = RayTracer::new(world, camera, IMAGE_HEIGHT, SAMPLES_PER_PIXEL, MAX_DEPTH);
+    let tracer = RayTracer {
+        world,
+        camera,
+        background,
+        image_height: IMAGE_HEIGHT,
+        samples_per_pixel: SAMPLES_PER_PIXEL,
+        max_depth: MAX_DEPTH,
+    };
     tracer.trace(&mut file)?;
 
     Ok(())

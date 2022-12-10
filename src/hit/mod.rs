@@ -108,9 +108,9 @@ impl AgainstRayHitRecord {
 pub trait Hit: Sync + Send {
     /// Returns the hit record for the ray if it hits the object, otherwise None
     fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<crate::HitRecord>;
-    
+
     /// Returns the bounding box of the object
-    /// 
+    ///
     /// This function returns a option because some objects do not have a bounding box,
     /// such as infinite planes. Moving objects will have a bounding box that encloses
     /// the object at all times.
