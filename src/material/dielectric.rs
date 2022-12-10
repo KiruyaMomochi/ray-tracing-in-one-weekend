@@ -67,6 +67,6 @@ impl Material for Dielectric {
         let scattered = Ray::new(hit_record.point, direction, ray.time());
 
         // attenuation is always 1 as the glass surface absorbs nothing
-        Some((scattered, Color::white()))
+        Some((scattered, Color::WHITE))
     }
 }

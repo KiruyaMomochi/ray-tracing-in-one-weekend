@@ -2,6 +2,12 @@ pub type Color = super::Vec3<f64>;
 
 pub const COLOR_MAX: f64 = 255.0;
 impl Color {
+    pub const BLACK: Self = Self::new(0.0, 0.0, 0.0);
+    pub const WHITE: Self = Self::new(1.0, 1.0, 1.0);
+    pub const RED: Self = Self::new(1.0, 0.0, 0.0);
+    pub const GREEN: Self = Self::new(0.0, 1.0, 0.0);
+    pub const BLUE: Self = Self::new(0.0, 0.0, 1.0);
+
     /// For a given color, return the PPM color string.
     /// The color is clamped to [0, 255], and then rounded to the nearest integer.
     ///
@@ -22,26 +28,6 @@ impl Color {
     pub fn is_valid_color(&self) -> bool {
         self.iter()
             .all(|x| x.is_finite() && (0.0..=1.0).contains(x))
-    }
-
-    pub fn white() -> Self {
-        Self::ones()
-    }
-
-    pub fn black() -> Self {
-        Self::zeros()
-    }
-
-    pub fn red() -> Self {
-        Self::new(1.0, 0.0, 0.0)
-    }
-
-    pub fn green() -> Self {
-        Self::new(0.0, 1.0, 0.0)
-    }
-
-    pub fn blue() -> Self {
-        Self::new(0.0, 0.0, 1.0)
     }
 
     pub fn from_rgb8(r: u8, g: u8, b: u8) -> Self {

@@ -20,6 +20,8 @@ mod scene {
         pub camera_builder: CameraBuilder,
     }
 
+    const SKY: Color = Color::new(0.7, 0.8, 1.0);
+
     pub fn random_scene() -> Scene {
         let mut rng = rand::thread_rng();
         let mut world = World::new();
@@ -87,7 +89,7 @@ mod scene {
                 .look_at(0.0, 0.0, 0.0)
                 .vertical_field_of_view(20.0)
                 .aperture(0.1),
-            background: Color::new(0.7, 0.8, 1.0),
+            background: SKY,
         }
     }
 
@@ -109,7 +111,7 @@ mod scene {
                 .look_from(13.0, 2.0, 3.0)
                 .look_at(0.0, 0.0, 0.0)
                 .vertical_field_of_view(20.0),
-            background: Color::new(0.7, 0.8, 1.0),
+            background: SKY,
         }
     }
 
@@ -131,7 +133,7 @@ mod scene {
                 .look_from(13.0, 2.0, 3.0)
                 .look_at(0.0, 0.0, 0.0)
                 .vertical_field_of_view(20.0),
-            background: Color::new(0.7, 0.8, 1.0),
+            background: SKY,
         }
     }
 
@@ -148,7 +150,7 @@ mod scene {
                 .look_from(13.0, 2.0, 3.0)
                 .look_at(0.0, 0.0, 0.0)
                 .vertical_field_of_view(20.0),
-            background: Color::new(0.7, 0.8, 1.0),
+            background: SKY,
         }
     }
 }

@@ -84,9 +84,7 @@ impl RayTracer {
             .collect::<Vec<_>>();
 
         for pixel_color in colors {
-            // for pixel_color in colors {
             writeln!(buffer, "{}", pixel_color.format_color())?;
-            // }
         }
 
         Ok(())
@@ -114,7 +112,7 @@ pub fn ray_color<T: Hit>(
 ) -> Color {
     if depth <= 0 {
         // If we've exceeded the ray bounce limit, no more light is gathered
-        Color::black()
+        Color::BLACK
     } else if let Some(hit) = ray.hit(object, t_min, t_max) {
         // emitted color from the object at hit point
         let emitted = hit.material.emit(hit.u, hit.v, hit.point);
@@ -128,7 +126,7 @@ pub fn ray_color<T: Hit>(
             );
             attenuation * ray_color(&ray, background, object, depth - 1, t_min, t_max)
         } else {
-            Color::black()
+            Color::BLACK
         };
 
         emitted + color

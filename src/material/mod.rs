@@ -20,6 +20,6 @@ pub trait Material: Debug + Sync + Send {
     /// Return the emitted color of material. For non-emissive materials, this
     /// is always black.
     fn emit(&self, _u: f64, _v: f64, _point: Point3) -> Color {
-        Color::black()
+        Color::BLACK
     }
 }
