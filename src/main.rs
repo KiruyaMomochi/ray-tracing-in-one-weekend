@@ -9,7 +9,10 @@ use std::{error::Error, fs, io::BufWriter, sync::Arc};
 #[allow(dead_code)]
 mod scene {
     use super::*;
-    use rtweekend::{camera::CameraBuilder, texture::Noise};
+    use rtweekend::{
+        camera::CameraBuilder,
+        texture::{Image, Noise},
+    };
 
     pub struct Scene {
         pub world: World,
@@ -127,6 +130,22 @@ mod scene {
                 .vertical_field_of_view(20.0),
         }
     }
+
+    pub fn earth() -> Scene {
+        let earth_texture = Image::open("img/earthmap.jpg").unwrap();
+        let earth_surface = Arc::new(Lambertian::new(earth_texture));
+        let globe = Sphere::new(Point3::zeros(), 2.0, earth_surface);
+
+        let world = World::from_vec(vec![Box::new(globe)]);
+
+        Scene {
+            world,
+            camera_builder: CameraBuilder::new()
+                .look_from(13.0, 2.0, 3.0)
+                .look_at(0.0, 0.0, 0.0)
+                .vertical_field_of_view(20.0),
+        }
+    }
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -138,7 +157,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     const MAX_DEPTH: i64 = 50;
 
     // World
-    let scene = scene::two_perlin_spheres();
+    let scene = scene::earth();
     let world = scene.world;
 
     // Camera (-1 to 1, -1 to 1, -1 to 0)

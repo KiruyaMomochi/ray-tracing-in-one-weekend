@@ -1,4 +1,4 @@
-use crate::{Color, Vec3};
+use crate::Color;
 
 use super::{perlin::Perlin, Texture};
 

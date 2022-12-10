@@ -10,6 +10,10 @@ impl World {
         Self(Vec::new())
     }
 
+    pub fn from_vec(hits: Vec<Box<dyn Hit>>) -> Self {
+        Self(hits)
+    }
+
     pub fn add<T: Hit + 'static>(&mut self, object: T) {
         self.0.push(Box::new(object));
     }

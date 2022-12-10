@@ -319,6 +319,7 @@ where
     }
 
     /// Linearly interpolate between two vectors.
+    /// Returns `self * (1 - t) + other * t`.
     /// The interpolation parameter `t` should be in the range [0, 1].
     ///
     /// # Arguments

@@ -1,11 +1,13 @@
 mod noise;
 mod perlin;
+mod image;
 
 use std::fmt::Debug;
 
 use crate::{Color, Point3};
 
 pub use noise::Noise;
+pub use self::image::Image;
 
 /// A texture usually means a function that makes the colors on a surface procedural.
 /// This procedure can be synthesis code, or it could be an image lookup, or a

@@ -43,4 +43,15 @@ impl Color {
     pub fn blue() -> Self {
         Self::new(0.0, 0.0, 1.0)
     }
+
+    pub fn from_rgb8(r: u8, g: u8, b: u8) -> Self {
+        const COLOR_MAX: f64 = u8::MAX as f64;
+        Self::new(r as f64 / COLOR_MAX, g as f64 / COLOR_MAX, b as f64 / COLOR_MAX)
+    }
+}
+
+impl From<[u8; 3]> for Color {
+    fn from(pixel: [u8; 3]) -> Self {
+        Self::from_rgb8(pixel[0], pixel[1], pixel[2])
+    }
 }
