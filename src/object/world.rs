@@ -27,16 +27,10 @@ impl Default for World {
 
 impl Hit for World {
     fn hit(&self, ray: &crate::Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-        // https://doc.rust-lang.org/std/primitive.slice.html#method.sort_by
-        self.0
-            .iter()
-            .filter_map(|object| object.hit(ray, t_min, t_max))
-            .min_by(|a, b| a.t.partial_cmp(&b.t).unwrap()) // unwarp: t != NaN
+        self.0.hit(ray, t_min, t_max)
     }
 
     fn bounding_box(&self, time_from: f64, time_to: f64) -> Option<AABB> {
-        self.0.iter()
-            .filter_map(|object| object.bounding_box(time_from, time_to))
-            .reduce(|a, b| a.merge(b))
+        self.0.bounding_box(time_from, time_to)
     }
 }

@@ -1,9 +1,67 @@
-use std::sync::Arc;
 use paste::paste;
+use std::sync::Arc;
 
-use crate::{Hit, HitRecord, Material, Vec3, hit::{AABB, OutwardHitRecord}};
+use crate::{
+    hit::{OutwardHitRecord, AABB},
+    Hit, HitRecord, Material, Vec3,
+};
+
+macro_rules! axis_aligned_rectangles {
+    ($x:ident, $y:ident, $z:ident) => {
+        axis_aligned_rectangle!($x, $y, $z);
+        axis_aligned_rectangle!($x, $z, $y);
+        axis_aligned_rectangle!($y, $z, $x);
+
+        paste! {
+            axis_aligned_rectangles!(@impl enum [< $x:upper $y:upper >], [< $x:upper $z:upper >], [< $y:upper $z:upper >]);
+        }
+    };
+
+    (@impl enum $($plane:ident),+) => {
+        paste! {
+            #[derive(Debug, Clone)]
+            pub enum AxisAlignedRectangle {
+                $(
+                    [< $plane >]([< $plane Rectangle >]),
+                )+
+            }
+        }
+
+        impl Hit for AxisAlignedRectangle {
+            fn hit(&self, ray: &crate::Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+                match self {
+                    $(
+                        AxisAlignedRectangle::$plane(rect) => rect.hit(ray, t_min, t_max),
+                    )+
+                }
+            }
+
+            fn bounding_box(&self, time_from: f64, time_too: f64) -> Option<AABB> {
+                match self {
+                    $(
+                        AxisAlignedRectangle::$plane(rect) => rect.bounding_box(time_from, time_too),
+                    )+
+                }
+            }
+        }
+
+        paste! {
+            $(
+                impl From<[< $plane Rectangle >]> for AxisAlignedRectangle {
+                    fn from(rect: [< $plane Rectangle >]) -> Self {
+                        AxisAlignedRectangle::$plane(rect)
+                    }
+                }
+            )+
+        }
+    }
+}
+
 macro_rules! axis_aligned_rectangle {
     ($axis1:ident, $axis2:ident, $axis_plane:ident) => {
+        axis_aligned_rectangle!(@impl $axis1, $axis2, $axis_plane);
+    };
+    (@impl $axis1:ident, $axis2:ident, $axis_plane:ident) => {
         paste! {
             axis_aligned_rectangle!(@impl
                 $axis1,
@@ -18,6 +76,7 @@ macro_rules! axis_aligned_rectangle {
         }
     };
     (@impl $x:ident, $y:ident, $z:ident, $sf:ident, $x0:ident, $x1:ident, $y0:ident, $y1:ident) => {
+        #[derive(Debug, Clone)]
         pub struct $sf {
             $x0: f64,
             $x1: f64,
@@ -95,6 +154,4 @@ macro_rules! axis_aligned_rectangle {
     }
 }
 
-axis_aligned_rectangle!(x, y, z);
-axis_aligned_rectangle!(x, z, y);
-axis_aligned_rectangle!(y, z, x);
+axis_aligned_rectangles!(x, y, z);

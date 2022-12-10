@@ -19,7 +19,10 @@ mod scene {
     use rtweekend::{
         camera::CameraBuilder,
         material::DiffuseLight,
-        object::rectangle::{XYRectangle, XZRectangle, YZRectangle},
+        object::{
+            rectangle::{XYRectangle, XZRectangle, YZRectangle},
+            Block,
+        },
         texture::{Image, Noise},
         Hit,
     };
@@ -239,7 +242,22 @@ mod scene {
                 555.0,
                 white.clone(),
             )),
-            Box::new(XYRectangle::new((0.0, 0.0), (555.0, 555.0), 555.0, white)),
+            Box::new(XYRectangle::new(
+                (0.0, 0.0),
+                (555.0, 555.0),
+                555.0,
+                white.clone(),
+            )),
+            Box::new(Block::new(
+                Point3::new(130.0, 0.0, 65.0),
+                Point3::new(295.0, 165.0, 230.0),
+                white.clone(),
+            )),
+            Box::new(Block::new(
+                Point3::new(265.0, 0.0, 295.0),
+                Point3::new(430.0, 330.0, 460.0),
+                white,
+            )),
         ];
 
         Scene {
