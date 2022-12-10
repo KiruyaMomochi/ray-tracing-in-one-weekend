@@ -1,3 +1,4 @@
+use crate::Ray;
 use paste::paste;
 use std::sync::Arc;
 
@@ -28,7 +29,7 @@ macro_rules! axis_aligned_rectangles {
         }
 
         impl Hit for AxisAlignedRectangle {
-            fn hit(&self, ray: &crate::Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+            fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
                 match self {
                     $(
                         AxisAlignedRectangle::$plane(rect) => rect.hit(ray, t_min, t_max),
@@ -107,7 +108,7 @@ macro_rules! axis_aligned_rectangle {
         }
 
         impl Hit for $sf {
-            fn hit(&self, ray: &crate::Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+            fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
                 // for a ray P(t) = A + t b,
                 // where A is the origin and b is the direction,
                 // the intersection with the plane z = k is
@@ -136,7 +137,7 @@ macro_rules! axis_aligned_rectangle {
                 let normal_outward = paste! { Vec3::[<unit_ $z>]() };
 
                 Some(
-                    OutwardHitRecord::new(point, ray, normal_outward, t, self.material.clone(), (u, v))
+                    OutwardHitRecord::new(point, &ray, normal_outward, t, self.material.clone(), (u, v))
                         .into_against_ray(),
                 )
             }

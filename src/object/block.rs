@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::{Material, Point3, Hit, hit::AABB, HitRecord};
+use crate::{Material, Point3, Hit, hit::AABB, HitRecord, Ray};
 use paste::paste;
 
 use super::rectangle::{AxisAlignedRectangle, XYRectangle, XZRectangle, YZRectangle};
@@ -59,7 +59,7 @@ impl Block {
 }
 
 impl Hit for Block {
-    fn hit(&self, ray: &crate::Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         self.rectangles.hit(ray, t_min, t_max)
     }
 

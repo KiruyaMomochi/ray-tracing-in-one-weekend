@@ -10,7 +10,7 @@ pub use hit_record::OutwardHitRecord;
 /// Trait for objects that can be hit by a ray
 pub trait Hit: Sync + Send {
     /// Returns the hit record for the ray if it hits the object, otherwise None
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<crate::HitRecord>;
+    fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<crate::HitRecord>;
 
     /// Returns the bounding box of the object
     ///
@@ -21,7 +21,7 @@ pub trait Hit: Sync + Send {
 }
 
 impl<H: Hit> Hit for Box<H> {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<crate::HitRecord> {
+    fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<crate::HitRecord> {
         self.as_ref().hit(ray, t_min, t_max)
     }
 
@@ -31,7 +31,7 @@ impl<H: Hit> Hit for Box<H> {
 }
 
 impl Hit for Box<dyn Hit> {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<crate::HitRecord> {
+    fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<crate::HitRecord> {
         self.as_ref().hit(ray, t_min, t_max)
     }
 
@@ -41,10 +41,10 @@ impl Hit for Box<dyn Hit> {
 }
 
 impl<H: Hit> Hit for [H] {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<crate::HitRecord> {
+    fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<crate::HitRecord> {
         // https://doc.rust-lang.org/std/primitive.slice.html#method.sort_by
         self.iter()
-            .filter_map(|obj| obj.hit(ray, t_min, t_max))
+            .filter_map(|obj| obj.hit(ray.clone(), t_min, t_max))
             .min_by(|a, b| a.t.partial_cmp(&b.t).unwrap()) // unwarp: t != NaN
     }
 
@@ -56,7 +56,7 @@ impl<H: Hit> Hit for [H] {
 }
 
 impl<H: Hit> Hit for Vec<H> {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<crate::HitRecord> {
+    fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<crate::HitRecord> {
         self.as_slice().hit(ray, t_min, t_max)
     }
 

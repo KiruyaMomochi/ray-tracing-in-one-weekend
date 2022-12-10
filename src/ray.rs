@@ -4,7 +4,7 @@ use crate::{
     HitRecord,
 };
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct Ray {
     origin: Point3,
     direction: Vec3<f64>,

@@ -75,7 +75,7 @@ impl RayTracer {
 
                         let ray = camera.cast(u, v);
                         pixel_color_sum +=
-                            ray_color(&ray, background, world, max_depth, t_min, t_max);
+                            ray_color(ray, background, world, max_depth, t_min, t_max);
                     }
 
                     pixel_color_sum / (samples_per_pixel as f64)
@@ -103,7 +103,7 @@ impl RayTracer {
 /// Background color is a simple gradient, which
 /// linearly blends white and blue depending on the height of the y coordinate.
 pub fn ray_color<T: Hit>(
-    ray: &Ray,
+    ray: Ray,
     background: Color,
     object: &T,
     depth: i64,
@@ -113,13 +113,13 @@ pub fn ray_color<T: Hit>(
     if depth <= 0 {
         // If we've exceeded the ray bounce limit, no more light is gathered
         Color::BLACK
-    } else if let Some(hit) = ray.hit(object, t_min, t_max) {
+    } else if let Some(hit) = ray.clone().hit(object, t_min, t_max) {
         // emitted color from the object at hit point
         let emitted = hit.material.emit(hit.point, hit.u, hit.v);
 
-        let color = if let Some((ray, attenuation)) = hit.material.scatter(ray, &hit) {
+        let color = if let Some((ray, attenuation)) = hit.material.scatter(&ray, &hit) {
             // the scattered ray
-            attenuation * ray_color(&ray, background, object, depth - 1, t_min, t_max)
+            attenuation * ray_color(ray, background, object, depth - 1, t_min, t_max)
         } else {
             Color::BLACK
         };

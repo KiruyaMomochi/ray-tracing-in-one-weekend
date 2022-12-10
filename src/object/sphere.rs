@@ -66,7 +66,7 @@ impl MovingSphere {
 
     pub fn center(&self, time: f64) -> Vec3<f64> {
         let ratio = (time - self.time_from) / (self.time_to - self.time_from);
-        self.center_from.lerp(self.center_to, ratio)        
+        self.center_from.lerp(self.center_to, ratio)
     }
 
     pub fn radius(&self) -> f64 {
@@ -139,12 +139,12 @@ impl Hit for Sphere {
     ///
     ///     (b.b) t^2 + (2b.(A-C)) t + ((A-C).(A-C) - r^2) = 0
     ///
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let center = self.center();
         let radius = self.radius();
         let material = self.material.clone();
 
-        hit(center, radius, material, ray, t_min, t_max)
+        hit(center, radius, material, &ray, t_min, t_max)
     }
 
     fn bounding_box(&self, _: f64, _: f64) -> Option<AABB> {
@@ -160,14 +160,14 @@ impl Hit for Sphere {
 impl Hit for MovingSphere {
     /// Returns a [`HitRecord`] if `ray` hit to a point in `[t_min, t_max]`,
     /// or `None` if does not hit.
-    /// 
+    ///
     /// Refer to [`Sphere::hit`] for the equation.
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let center = self.center(ray.time());
         let radius = self.radius();
         let material = self.material.clone();
 
-        hit(center, radius, material, ray, t_min, t_max)
+        hit(center, radius, material, &ray, t_min, t_max)
     }
 
     fn bounding_box(&self, time_from: f64, time_to: f64) -> Option<AABB> {

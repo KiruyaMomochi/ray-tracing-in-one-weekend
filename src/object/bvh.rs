@@ -1,6 +1,6 @@
 use rand::Rng;
 
-use crate::{Hit, HitRecord, hit::AABB};
+use crate::{Hit, HitRecord, hit::AABB, Ray};
 
 /// Bounding volume hierarchy (BVH) tree node.
 ///
@@ -94,15 +94,15 @@ impl BVH {
 }
 
 impl Hit for BVH {
-    fn hit(&self, ray: &crate::Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-        if !self.bounding_box.is_hit(ray, t_min, t_max) {
+    fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        if !self.bounding_box.is_hit(&ray, t_min, t_max) {
             return None;
         }
 
         let left = self
             .left
             .as_ref()
-            .and_then(|left| left.hit(ray, t_min, t_max));
+            .and_then(|left| left.hit(ray.clone(), t_min, t_max));
         if left.is_some() {
             return left;
         }
@@ -111,7 +111,7 @@ impl Hit for BVH {
             .right
             .as_ref()
             .and_then(|right| right.hit(ray, t_min, t_max));
-        
+
         right
     }
 
