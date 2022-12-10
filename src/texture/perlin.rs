@@ -63,9 +63,9 @@ impl Perlin {
         let mut result: f64 = 0.0;
 
         for (i, j, k) in corner_iterator() {
-            let index = self.perm_x[(floor.x() + i) & Self::MAX_INDEX]
-                ^ self.perm_y[(floor.y() + j) & Self::MAX_INDEX]
-                ^ self.perm_z[(floor.z() + k) & Self::MAX_INDEX];
+            let index = self.perm_x[(floor.x().wrapping_add(i)) & Self::MAX_INDEX]
+                ^ self.perm_y[(floor.y().wrapping_add(j)) & Self::MAX_INDEX]
+                ^ self.perm_z[(floor.z().wrapping_add(k)) & Self::MAX_INDEX];
             let corner = self.random_vectors[index];
             let weight = intermediate - Vec3::new(i as f64, j as f64, k as f64);
 

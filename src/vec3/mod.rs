@@ -20,6 +20,12 @@ use rand::{
 #[derive(Clone, Debug, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Vec3<T: Copy>([T; 3]);
 
+impl<T: Copy + Default> Default for Vec3<T> {
+    fn default() -> Self {
+        Self([T::default(); 3])
+    }
+}
+
 
 impl<T: Copy> Vec3<T> {
     pub const fn new(x: T, y: T, z: T) -> Self {

@@ -115,15 +115,10 @@ pub fn ray_color<T: Hit>(
         Color::BLACK
     } else if let Some(hit) = ray.hit(object, t_min, t_max) {
         // emitted color from the object at hit point
-        let emitted = hit.material.emit(hit.u, hit.v, hit.point);
+        let emitted = hit.material.emit(hit.point, hit.u, hit.v);
 
         let color = if let Some((ray, attenuation)) = hit.material.scatter(ray, &hit) {
             // the scattered ray
-            assert!(
-                attenuation.is_valid_color(),
-                "attenuation {} is not valid color",
-                attenuation
-            );
             attenuation * ray_color(&ray, background, object, depth - 1, t_min, t_max)
         } else {
             Color::BLACK

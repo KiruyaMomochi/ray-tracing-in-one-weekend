@@ -18,7 +18,7 @@ pub trait Texture: Sync + Send + Debug {
     /// # Arguments
     ///
     /// * `point` - The point on the surface of the object.
-    /// * `u`, `v` - The texture coordinates of the point.
+    /// * `u`, `v` - The texture coordinates corresponding to the point.
     fn color(&self, point: Point3, u: f64, v: f64) -> Color;
 }
 

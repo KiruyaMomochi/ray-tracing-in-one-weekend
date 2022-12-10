@@ -1,10 +1,12 @@
 mod dielectric;
 mod lambertian;
 mod metal;
+mod diffuse_light;
 
 pub use dielectric::Dielectric;
 pub use lambertian::Lambertian;
 pub use metal::Metal;
+pub use diffuse_light::DiffuseLight;
 
 use crate::{Color, HitRecord, Point3, Ray};
 use std::fmt::Debug;
@@ -19,7 +21,13 @@ pub trait Material: Debug + Sync + Send {
 
     /// Return the emitted color of material. For non-emissive materials, this
     /// is always black.
-    fn emit(&self, _u: f64, _v: f64, _point: Point3) -> Color {
+    ///
+    /// # Arguments
+    ///
+    /// * `point` - The point on the surface of the object.
+    /// * `u`, `v` - The texture coordinates corresponding to the point.
+    #[allow(unused_variables)] // This is a default implementation, so the arguments may not be used.
+    fn emit(&self, point: Point3, u: f64, v: f64) -> Color {
         Color::BLACK
     }
 }
