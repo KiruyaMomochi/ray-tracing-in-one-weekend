@@ -30,7 +30,13 @@ impl AABB {
     }
 
     pub fn is_hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> bool {
-        for i in 0..3 {
+        // t_min and t_max are the intersection points of the ray with the AABB
+        let mut t_min = t_min;
+        let mut t_max = t_max;
+
+        // iterate over all three axes
+        // when t_min is greater than t_max, the ray misses the AABB
+        for i in 0..self.min.len() {
             let origin = ray.origin()[i];
             let direction = ray.direction()[i];
             let min = self.min[i];
@@ -43,8 +49,8 @@ impl AABB {
 
             // t0 and t1 are swapped if the ray is pointing in the opposite direction
             let (t0, t1) = if direction < 0.0 { (t1, t0) } else { (t0, t1) };
-            let t_min = t0.max(t_min);
-            let t_max = t1.min(t_max);
+            t_min = t0.max(t_min);
+            t_max = t1.min(t_max);
 
             // if t_max < t_min, then the slab is missed
             if t_max <= t_min {
