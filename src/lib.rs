@@ -92,7 +92,7 @@ impl RayTracer {
 
     pub fn trace<T: Write>(&self, buffer: &mut T) -> Result<(), Box<dyn Error>> {
         // To fix the shadow acne problem, which some hit rays may not at exactly t = 0
-        self.trace_in(buffer, 0.001, f64::INFINITY)
+        self.trace_in(buffer, f64::EPSILON, f64::INFINITY)
     }
 }
 

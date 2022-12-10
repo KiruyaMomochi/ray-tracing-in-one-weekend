@@ -10,6 +10,8 @@ use std::{error::Error, fs, io::BufWriter};
 mod scene {
     const SAMPLES_PER_PIXEL: u64 = 100;
     const SKY: Color = Color::new(0.7, 0.8, 1.0);
+    const IMAGE_WIDTH: u64 = 400;
+    const ASPECT_RATIO: f64 = 16.0 / 9.0;
 
     use std::sync::Arc;
 
@@ -17,8 +19,9 @@ mod scene {
     use rtweekend::{
         camera::CameraBuilder,
         material::DiffuseLight,
-        object::XYRectangle,
+        object::rectangle::{XYRectangle, XZRectangle, YZRectangle},
         texture::{Image, Noise},
+        Hit,
     };
 
     pub struct Scene {
@@ -26,6 +29,8 @@ mod scene {
         pub background: Color,
         pub camera_builder: CameraBuilder,
         pub samples_per_pixel: u64,
+        pub image_width: u64,
+        pub aspect_ratio: f64,
     }
 
     impl Default for Scene {
@@ -35,6 +40,8 @@ mod scene {
                 background: SKY,
                 camera_builder: Default::default(),
                 samples_per_pixel: SAMPLES_PER_PIXEL,
+                image_width: IMAGE_WIDTH,
+                aspect_ratio: ASPECT_RATIO,
             }
         }
     }
@@ -175,15 +182,12 @@ mod scene {
         let mut world = World::new();
 
         let perlin = Arc::new(Lambertian::new(Noise::new(4.0)));
-        world.add(Sphere::new(
-            Point3::new(0.0, -1000.0, 0.0),
-            1000.0,
-            perlin.clone(),
-        ));
+        let sphere = Sphere::new(Point3::new(0.0, -1000.0, 0.0), 1000.0, perlin.clone());
+        world.add(sphere);
         world.add(Sphere::new(Point3::new(0.0, 2.0, 0.0), 2.0, perlin));
 
         // light is brighter than `(1.0, 1.0, 1.0)` to bright enough to light up the scene
-        let diffuse_light = Arc::new(DiffuseLight::solid(Color::new(4.0, 4.0, 4.0)));
+        let diffuse_light = Arc::new(DiffuseLight::new_solid(Color::new(4.0, 4.0, 4.0)));
         world.add(XYRectangle::new(
             (3.0, 1.0),
             (5.0, 3.0),
@@ -199,28 +203,73 @@ mod scene {
                 .look_at(0.0, 2.0, 0.0)
                 .vertical_field_of_view(20.0),
             samples_per_pixel: 400,
+            ..Default::default()
+        }
+    }
+
+    pub fn cornell_box() -> Scene {
+        const RED: Color = Color::new(0.65, 0.05, 0.05);
+        const WHITE: Color = Color::new(0.73, 0.73, 0.73);
+        const GREEN: Color = Color::new(0.12, 0.45, 0.15);
+        const LIGHT: Color = Color::new(15.0, 15.0, 15.0);
+
+        let red = Arc::new(Lambertian::new_solid(RED));
+        let white = Arc::new(Lambertian::new_solid(WHITE));
+        let green = Arc::new(Lambertian::new_solid(GREEN));
+        let light = Arc::new(DiffuseLight::new_solid(LIGHT));
+
+        let objects: Vec<Box<dyn Hit>> = vec![
+            Box::new(YZRectangle::new((0.0, 0.0), (555.0, 555.0), 555.0, green)),
+            Box::new(YZRectangle::new((0.0, 0.0), (555.0, 555.0), 0.0, red)),
+            Box::new(XZRectangle::new(
+                (213.0, 227.0),
+                (343.0, 332.0),
+                554.0,
+                light,
+            )),
+            Box::new(XZRectangle::new(
+                (0.0, 0.0),
+                (555.0, 555.0),
+                0.0,
+                white.clone(),
+            )),
+            Box::new(XZRectangle::new(
+                (0.0, 0.0),
+                (555.0, 555.0),
+                555.0,
+                white.clone(),
+            )),
+            Box::new(XYRectangle::new((0.0, 0.0), (555.0, 555.0), 555.0, white)),
+        ];
+
+        Scene {
+            world: World::from_vec(objects),
+            background: Color::BLACK,
+            camera_builder: CameraBuilder::new()
+                .look_from(278.0, 278.0, -800.0)
+                .look_at(278.0, 278.0, 0.0)
+                .vertical_field_of_view(40.0),
+            aspect_ratio: 1.0,
+            image_width: 600,
+            samples_per_pixel: 200,
         }
     }
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
     // Image
-    // Use 16:9 aspect ratio
-    const ASPECT_RATIO: f64 = 16.0 / 9.0;
-    const IMAGE_HEIGHT: u64 = 400 / ASPECT_RATIO as u64;
     const MAX_DEPTH: i64 = 50;
 
     // World
-    let scene = scene::simple_light();
-    let world = scene.world;
-    let background = scene.background;
-    let samples_per_pixel = scene.samples_per_pixel;
+    let scene = scene::cornell_box();
+    let aspect_ratio = scene.aspect_ratio;
+    let image_height = (scene.image_width as f64 / aspect_ratio) as u64;
 
     // Camera (-1 to 1, -1 to 1, -1 to 0)
     let camera = scene
         .camera_builder
         .view_up(0.0, 1.0, 0.0)
-        .aspect_ratio(ASPECT_RATIO)
+        .aspect_ratio(aspect_ratio)
         .focus_distance(10.0)
         .build();
     println!("{}", camera);
@@ -228,11 +277,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut file = BufWriter::new(fs::File::create("image.ppm")?);
 
     let tracer = RayTracer {
-        world,
+        world: scene.world,
         camera,
-        background,
-        image_height: IMAGE_HEIGHT,
-        samples_per_pixel,
+        background: scene.background,
+        image_height,
+        samples_per_pixel: scene.samples_per_pixel,
         max_depth: MAX_DEPTH,
     };
     tracer.trace(&mut file)?;

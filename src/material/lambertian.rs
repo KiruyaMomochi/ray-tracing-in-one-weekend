@@ -1,4 +1,5 @@
 use crate::Vec3;
+use crate::texture::SolidColor;
 use crate::{Material, HitRecord, Ray, Color, texture::Texture};
 
 /// Diffuse material, which can either scatter always and attenuate by its
@@ -13,6 +14,12 @@ pub struct Lambertian<T: Texture> {
 impl<T: Texture> Lambertian<T> {
     pub fn new(albedo: T) -> Self {
         Self { albedo }
+    }
+}
+
+impl Lambertian<SolidColor> {
+    pub fn new_solid(albedo: Color) -> Self {
+        Self::new(SolidColor::new(albedo))
     }
 }
 

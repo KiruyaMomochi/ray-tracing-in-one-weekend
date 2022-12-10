@@ -34,6 +34,8 @@ macro_rules! axis_aligned_rectangle {
                 $z: f64,
                 material: Arc<dyn Material>,
             ) -> Self {
+                assert!($x0 < $x1, "{} must be less than {}", stringify!($x0), stringify!($x1));
+                assert!($y0 < $y1, "{} must be less than {}", stringify!($y0), stringify!($y1));
                 Self {
                     $x0,
                     $x1,
@@ -71,8 +73,8 @@ macro_rules! axis_aligned_rectangle {
                 let u = ($x - self.$x0) / (self.$x1 - self.$x0);
                 let v = ($y - self.$y0) / (self.$y1 - self.$y0);
 
-                // the outward normal is always a unit vector along the z axis
-                let normal_outward = Vec3::new(0.0, 0.0, 1.0);
+                // the outward normal is always a unit vector along the plane's normal
+                let normal_outward = paste! { Vec3::[<unit_ $z>]() };
 
                 Some(
                     OutwardHitRecord::new(point, ray, normal_outward, t, self.material.clone(), (u, v))

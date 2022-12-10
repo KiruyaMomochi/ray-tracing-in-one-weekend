@@ -11,7 +11,7 @@ use std::{
     },
 };
 
-use num::{clamp, traits::FloatConst, One};
+use num::{clamp, traits::FloatConst, One, Zero};
 use rand::{
     distributions::uniform::{SampleRange, SampleUniform},
     Rng,
@@ -25,7 +25,6 @@ impl<T: Copy + Default> Default for Vec3<T> {
         Self([T::default(); 3])
     }
 }
-
 
 impl<T: Copy> Vec3<T> {
     pub const fn new(x: T, y: T, z: T) -> Self {
@@ -199,6 +198,23 @@ where
 
 impl<T> Vec3<T>
 where
+    T: Copy + One + Zero,
+{
+    pub fn unit_x() -> Self {
+        Self::new(T::one(), T::zero(), T::zero())
+    }
+
+    pub fn unit_y() -> Self {
+        Self::new(T::zero(), T::one(), T::zero())
+    }
+
+    pub fn unit_z() -> Self {
+        Self::new(T::zero(), T::zero(), T::one())
+    }
+}
+
+impl<T> Vec3<T>
+where
     T: Copy + SampleUniform,
     Range<T>: SampleRange<T>,
 {
@@ -225,7 +241,10 @@ where
 
 // static EPSILON: T = T::epsilon() * T::from(100.0).unwrap();
 
-pub trait Float where Self: num::Float {
+pub trait Float
+where
+    Self: num::Float,
+{
     const EPSILON: Self;
 }
 
@@ -241,7 +260,6 @@ impl<T> Vec3<T>
 where
     T: Copy + Float,
 {
-
     /// The l2 norm of the vector.
     /// It is the square root of the sum of the squares of the components.
     /// It also equals the square root of the dot product of the vector with itself.

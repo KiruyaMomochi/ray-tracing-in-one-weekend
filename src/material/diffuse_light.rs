@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use crate::{
     texture::{SolidColor, Texture},
     Color, Material, Point3,
@@ -7,20 +5,23 @@ use crate::{
 
 /// A material which emits light with color from a texture.
 #[derive(Debug, Clone)]
-pub struct DiffuseLight {
-    texture: Arc<dyn Texture>,
+pub struct DiffuseLight<T: Texture> {
+    texture: T,
 }
 
-impl DiffuseLight {
-    pub fn new(texture: Arc<dyn Texture>) -> Self {
+impl<T: Texture> DiffuseLight<T> {
+    pub fn new(texture: T) -> Self {
         Self { texture }
     }
-    pub fn solid(color: Color) -> Self {
-        Self::new(Arc::new(SolidColor::new(color)))
+}
+
+impl DiffuseLight<SolidColor> {
+    pub fn new_solid(color: Color) -> Self {
+        Self::new(SolidColor::new(color))
     }
 }
 
-impl Material for DiffuseLight {
+impl<T: Texture> Material for DiffuseLight<T> {
     fn scatter(
         &self,
         _ray: &crate::Ray,
