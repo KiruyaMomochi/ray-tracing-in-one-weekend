@@ -35,7 +35,7 @@ macro_rules! rectangles {
             rectangle!(($min, $max).($x, $z), $min.$y, $material.clone()),
             rectangle!(($min, $max).($x, $z), $max.$y, $material.clone()),
             rectangle!(($min, $max).($y, $z), $min.$x, $material.clone()),
-            rectangle!(($min, $max).($y, $z), $min.$y, $material),
+            rectangle!(($min, $max).($y, $z), $max.$y, $material),
         ]
     };
 }
