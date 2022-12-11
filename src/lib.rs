@@ -9,6 +9,7 @@ mod vec3;
 pub use camera::Camera;
 pub use hit::Hit;
 use indicatif::ParallelProgressIterator;
+use log::debug;
 pub use material::Material;
 pub use object::Sphere;
 pub use object::World;
@@ -35,19 +36,63 @@ impl RayTracer {
         self.camera.aspect_ratio()
     }
 
+    pub fn trace_single(
+        &self,
+        i: u64,
+        j: u64,
+        image_width: u64,
+        image_height: u64,
+        t_min: f64,
+        t_max: f64,
+    ) -> Color {
+        let mut rng = rand::thread_rng();
+        let (width, height) = (image_width as f64, image_height as f64);
+        let (i, j) = (i as f64, height - j as f64 - 1.0);
+
+        let ray = self.camera.cast(i / (width - 1.0), j / (height - 1.0));
+        debug!("## {} {}", i, j);
+
+        let mut pixel_color_sum = ray_color(
+            ray,
+            self.background,
+            &self.world,
+            self.max_depth,
+            t_min,
+            t_max,
+        );
+
+        for _ in 1..self.samples_per_pixel {
+            // u: left 0.0 -> 1.0 right
+            // v: botm 0.0 -> 1.0 up
+            // rng.gen: standard distribution, [0, 1)
+            let u = (i + rng.gen::<f64>()) / (width - 1.0);
+            let v = (j + rng.gen::<f64>()) / (height - 1.0);
+
+            let ray = self.camera.cast(u, v);
+            pixel_color_sum += ray_color(
+                ray,
+                self.background,
+                &self.world,
+                self.max_depth,
+                t_min,
+                t_max,
+            );
+        }
+
+        debug!(
+            "  final color: {:?}",
+            pixel_color_sum / (self.samples_per_pixel as f64)
+        );
+        pixel_color_sum / (self.samples_per_pixel as f64)
+    }
+
     pub fn trace_in<T: Write>(
         &self,
         buffer: &mut T,
         t_min: f64,
         t_max: f64,
     ) -> Result<(), Box<dyn Error>> {
-        let camera = &self.camera;
-        let world = &self.world;
-        let background = self.background;
         let image_height = self.image_height;
-        let samples_per_pixel = self.samples_per_pixel;
-        let max_depth = self.max_depth;
-
         let image_width: u64 = (self.aspect_ratio() * image_height as f64) as u64;
 
         writeln!(buffer, "P3")?;
@@ -59,34 +104,9 @@ impl RayTracer {
             .into_par_iter()
             .progress_count(image_height)
             .flat_map(|j| {
-                (0..image_width).into_par_iter().map(move |i| {
-                    let mut rng = rand::thread_rng();
-                    let (width, height) = (image_width as f64, image_height as f64);
-                    let (i, j) = (i as f64, height - j as f64 - 1.0);
-
-                    let mut pixel_color_sum = ray_color(
-                        camera.cast(i / (width - 1.0), j / (height - 1.0)),
-                        background,
-                        world,
-                        max_depth,
-                        t_min,
-                        t_max,
-                    );
-
-                    for _ in 1..samples_per_pixel {
-                        // u: left 0.0 -> 1.0 right
-                        // v: botm 0.0 -> 1.0 up
-                        // rng.gen: standard distribution, [0, 1)
-                        let u = (i + rng.gen::<f64>()) / (width - 1.0);
-                        let v = (j + rng.gen::<f64>()) / (height - 1.0);
-
-                        let ray = camera.cast(u, v);
-                        pixel_color_sum +=
-                            ray_color(ray, background, world, max_depth, t_min, t_max);
-                    }
-
-                    pixel_color_sum / (samples_per_pixel as f64)
-                })
+                (0..image_width)
+                    .into_par_iter()
+                    .map(move |i| self.trace_single(i, j, image_width, image_height, t_min, t_max))
             })
             .collect::<Vec<_>>();
 
@@ -117,16 +137,25 @@ pub fn ray_color<T: Hit>(
     t_min: f64,
     t_max: f64,
 ) -> Color {
-    if depth <= 0 {
+    debug!("  [{}] ray: {} -> {}", depth, ray.origin(), ray.direction());
+    let color = if depth <= 0 {
         // If we've exceeded the ray bounce limit, no more light is gathered
         Color::BLACK
     } else if let Some(hit) = ray.clone().hit(object, t_min, t_max) {
-        // emitted color from the object at hit point
-        // this may larger than 1.0, which means the object is brighter
-        let emitted = hit.material.emit(hit.point, hit.u, hit.v);
+        let emitted = hit.emitted;
+        debug!(
+            "  [{}]   hit at t = {} {}, normal {}",
+            depth, hit.t, hit.point, hit.normal_outward
+        );
         let hit = hit.into_against_ray();
 
         let color = if let Some((ray, attenuation)) = hit.material.scatter(&ray, &hit) {
+            debug!("  [{}]   attenuation: {}", depth, attenuation);
+            if attenuation.is_near_zero() {
+                // short circuit
+                debug!("  [{}]   attenuation is zero, short circuit", depth);
+                return Color::BLACK;
+            }
             // the scattered ray
             attenuation * ray_color(ray, background, object, depth - 1, t_min, t_max)
         } else {
@@ -137,5 +166,7 @@ pub fn ray_color<T: Hit>(
     } else {
         // The ray hits nothing, return the background color
         background
-    }
+    };
+    debug!("  [{}]   color: {}", depth, color);
+    color
 }

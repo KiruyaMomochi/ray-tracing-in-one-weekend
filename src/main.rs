@@ -21,7 +21,7 @@ mod scene {
         material::DiffuseLight,
         object::{Block, rectangle::AxisAlignedRectangle},
         texture::{Image, Noise},
-        Hit, hit::{rotation::Rotate, translation::Translate},
+        Hit, hit::{rotation::Rotate, translation::Translate, ConstantMedium},
     };
 
     pub struct Scene {
@@ -259,7 +259,80 @@ mod scene {
                 (0.0, 0.0),
                 (555.0, 555.0),
                 555.0,
+                white,
+            )),
+            Box::new(block_front),
+            Box::new(block_back),
+        ];
+
+        Scene {
+            world: World::from_vec(objects),
+            background: Color::BLACK,
+            camera_builder: CameraBuilder::new()
+                .look_from(278.0, 278.0, -800.0)
+                .look_at(278.0, 278.0, 0.0)
+                .vertical_field_of_view(40.0),
+            aspect_ratio: 1.0,
+            image_width: 600,
+            samples_per_pixel: 200,
+        }
+    }
+
+    pub fn cornell_smoke() -> Scene {
+        const RED: Color = Color::new(0.65, 0.05, 0.05);
+        const WHITE: Color = Color::new(0.73, 0.73, 0.73);
+        const GREEN: Color = Color::new(0.12, 0.45, 0.15);
+        const LIGHT: Color = Color::new(7.0, 7.0, 7.0);
+
+        let red = Arc::new(Lambertian::new_solid(RED));
+        let white = Arc::new(Lambertian::new_solid(WHITE));
+        let green = Arc::new(Lambertian::new_solid(GREEN));
+        let light = Arc::new(DiffuseLight::new_solid(LIGHT));
+
+        let block_front = Block::new(
+            Point3::new(0.0, 0.0, 0.0),
+            Point3::new(165.0, 330.0, 165.0),
+            red.clone(),
+        );
+        let block_front = Rotate::new_y(block_front, 15.0);
+        let block_front = Translate::new(block_front, Vec3::new(265.0, 0.0, 295.0));
+        let block_front = ConstantMedium::solid(block_front, Color::BLACK, 0.01);
+
+        let block_back = Block::new(
+            Point3::new(0.0, 0.0, 0.0),
+            Point3::new(165.0, 165.0, 165.0),
+            white.clone(),
+        );
+        let block_back = Rotate::new_y(block_back, -18.0);
+        let block_back = Translate::new(block_back, Vec3::new(130.0, 0.0, 65.0));
+        let block_back = ConstantMedium::solid(block_back, Color::WHITE, 0.01);
+
+        let objects: Vec<Box<dyn Hit>> = vec![
+            Box::new(AxisAlignedRectangle::new_yz((0.0, 0.0), (555.0, 555.0), 555.0, green)),
+            Box::new(AxisAlignedRectangle::new_yz((0.0, 0.0), (555.0, 555.0), 0.0, red)),
+            Box::new(AxisAlignedRectangle::new_xz(
+                (113.0, 127.0),
+                (443.0, 432.0),
+                554.0,
+                light,
+            )),
+            Box::new(AxisAlignedRectangle::new_xz(
+                (0.0, 0.0),
+                (555.0, 555.0),
+                0.0,
                 white.clone(),
+            )),
+            Box::new(AxisAlignedRectangle::new_xz(
+                (0.0, 0.0),
+                (555.0, 555.0),
+                555.0,
+                white.clone(),
+            )),
+            Box::new(AxisAlignedRectangle::new_xy(
+                (0.0, 0.0),
+                (555.0, 555.0),
+                555.0,
+                white,
             )),
             Box::new(block_front),
             Box::new(block_back),
@@ -284,7 +357,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     const MAX_DEPTH: i64 = 50;
 
     // World
-    let scene = scene::cornell_box();
+    let scene = scene::cornell_smoke();
     let aspect_ratio = scene.aspect_ratio;
     let image_height = (scene.image_width as f64 / aspect_ratio) as u64;
 

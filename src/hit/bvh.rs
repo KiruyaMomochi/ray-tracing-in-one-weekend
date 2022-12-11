@@ -5,6 +5,7 @@ use crate::{Hit, hit::{AABB, OutwardHitRecord}, Ray};
 /// Bounding volume hierarchy (BVH) tree node.
 ///
 /// BVH tree is a binary tree. It can respond to the query "does this ray intersect".
+#[derive(Debug)]
 pub struct BVH {
     /// Bounding box of the node
     bounding_box: AABB,

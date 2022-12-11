@@ -3,6 +3,7 @@ use crate::{Hit, hit::{AABB, OutwardHitRecord}, Ray};
 // Vec<Box<dyn trait>> has an implict 'static lifetime
 // https://stackoverflow.com/questions/70717050/why-do-i-need-static-lifetime-here-and-how-to-fix-it
 // https://users.rust-lang.org/t/box-with-a-trait-object-requires-static-lifetime/35261/2
+#[derive(Debug)]
 pub struct World(Vec<Box<dyn Hit>>);
 
 impl World {

@@ -2,11 +2,13 @@ mod dielectric;
 mod lambertian;
 mod metal;
 mod diffuse_light;
+mod isotropic;
 
 pub use dielectric::Dielectric;
 pub use lambertian::Lambertian;
 pub use metal::Metal;
 pub use diffuse_light::DiffuseLight;
+pub use isotropic::Isotropic;
 
 use crate::{Color, Point3, Ray, hit::AgainstRayHitRecord};
 use std::fmt::Debug;

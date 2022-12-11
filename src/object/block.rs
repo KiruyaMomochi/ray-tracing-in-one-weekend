@@ -8,6 +8,7 @@ use super::rectangle::AxisAlignedRectangle;
 
 /// An axis-aligned block of space.
 /// It holds 6 rectangles, one for each face.
+#[derive(Debug, Clone)]
 pub struct Block {
     /// The 6 rectangles that make up the block.
     rectangles: [AxisAlignedRectangle; 6],

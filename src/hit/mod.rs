@@ -2,15 +2,20 @@ mod aabb;
 mod hit_record;
 pub mod translation;
 pub mod rotation;
+mod bvh;
+mod constant;
+
+use std::fmt::Debug;
 
 pub use aabb::AABB;
+pub use bvh::BVH;
 
 use crate::Ray;
 pub use hit_record::AgainstRayHitRecord;
 pub use hit_record::OutwardHitRecord;
-
+pub use constant::ConstantMedium;
 /// Trait for objects that can be hit by a ray
-pub trait Hit: Sync + Send {
+pub trait Hit: Sync + Send + Debug {
     /// Returns the hit record for the ray if it hits the object, otherwise None
     fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<OutwardHitRecord>;
 
@@ -45,13 +50,21 @@ impl Hit for Box<dyn Hit> {
 impl<H: Hit> Hit for [H] {
     fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<OutwardHitRecord> {
         // https://doc.rust-lang.org/std/primitive.slice.html#method.sort_by
-        self.iter()
-            .filter_map(|obj| obj.hit(ray.clone(), t_min, t_max))
-            .min_by(|a, b| a.t.partial_cmp(&b.t).unwrap()) // unwarp: t != NaN
+        let mut t_max = t_max;
+        let mut closest = None;
+        for object in self.iter().rev() {
+            if let Some(hit) = object.hit(ray.clone(), t_min, t_max) {
+                t_max = t_max.min(hit.t);
+                closest = Some(hit);
+            }
+        }
+
+        closest
     }
 
     fn bounding_box(&self, time_from: f64, time_to: f64) -> Option<AABB> {
         self.iter()
+            .rev()
             .filter_map(|obj| obj.bounding_box(time_from, time_to))
             .reduce(|a, b| a.merge(&b))
     }

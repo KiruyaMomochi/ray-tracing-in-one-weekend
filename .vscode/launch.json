@@ -24,6 +24,11 @@
         },
         {
             "type": "lldb",
+            "request": "attach",
+            "name": "Attach executable 'rtweekend'",
+        },
+        {
+            "type": "lldb",
             "request": "launch",
             "name": "Debug unit tests in executable 'rtweekend'",
             "cargo": {

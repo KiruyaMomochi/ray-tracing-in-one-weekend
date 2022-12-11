@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use crate::{Material, Point3, Ray, Vec3};
+use crate::{Material, Point3, Ray, Vec3, Color};
 
 #[derive(Debug, Clone)]
 pub struct OutwardHitRecord {
@@ -17,6 +17,9 @@ pub struct OutwardHitRecord {
     pub u: f64,
     /// Surface coordinates of the hit point
     pub v: f64,
+    /// Color of emitted light from the object at hit point.
+    /// This may larger than 1.0, which means the object is brighter.
+    pub emitted: Color,
 }
 
 impl OutwardHitRecord {
@@ -29,6 +32,7 @@ impl OutwardHitRecord {
         (u, v): (f64, f64),
     ) -> Self {
         assert!(point.is_valid_point());
+        let emitted = material.emit(point, u, v);
         let front_face = ray.direction().dot(normal_outward) < crate::vec3::Float::EPSILON;
         Self {
             point,
@@ -38,6 +42,7 @@ impl OutwardHitRecord {
             front_face,
             u,
             v,
+            emitted,
         }
     }
 
@@ -65,6 +70,7 @@ impl OutwardHitRecord {
             front_face,
             u: self.u,
             v: self.v,
+            emitted: self.emitted,
         }
     }
 }
@@ -85,6 +91,9 @@ pub struct AgainstRayHitRecord {
     pub u: f64,
     /// Surface coordinates of the hit point
     pub v: f64,
+    /// Color of emitted light from the object at hit point.
+    /// This may larger than 1.0, which means the object is brighter.
+    pub emitted: Color,
 }
 
 impl AgainstRayHitRecord {
