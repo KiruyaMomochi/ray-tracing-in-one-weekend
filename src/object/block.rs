@@ -4,6 +4,7 @@ use crate::{
     hit::{OutwardHitRecord, AABB},
     Hit, Material, Point3, Ray,
 };
+use super::rectangle::AxisAlignedRectangle;
 
 /// An axis-aligned block of space.
 /// It holds 6 rectangles, one for each face.
@@ -17,25 +18,26 @@ pub struct Block {
 }
 
 macro_rules! rectangle {
-    (($min:ident, $max:ident).($axis1:ident, $axis2:ident), $side:ident.$plane:ident, $material:expr) => {
-        paste! {
-            rectangle!(@impl [< $axis1:upper $axis2:upper Rectangle>], ($min.$axis1(), $min.$axis2()), ($max.$axis1(), $max.$axis2()), $side.$plane(), $material)
-        }
-    };
-    (@impl $st:ident, $min:tt, $max:tt, $plane:expr, $material:expr) => {
-        AxisAlignedRectangle::from($st::new($min, $max, $plane, $material))
+    (($min:ident, $max:ident), $side:ident, [$plane:literal, $axis1:literal, $axis2:literal], $material:expr) => {
+        AxisAlignedRectangle::new(
+            ($min[$axis1], $min[$axis2]),
+            ($max[$axis1], $max[$axis2]),
+            $side[$plane],
+            [$plane, $axis1, $axis2],
+            $material,
+        )
     };
 }
 
 macro_rules! rectangles {
-    (($min:ident, $max:ident).($x:ident, $y:ident, $z:ident), $material:ident) => {
+    (($min:ident, $max:ident), $material:ident) => {
         [
-            rectangle!(($min, $max).($x, $y), $min.$z, $material.clone()),
-            rectangle!(($min, $max).($x, $y), $max.$z, $material.clone()),
-            rectangle!(($min, $max).($x, $z), $min.$y, $material.clone()),
-            rectangle!(($min, $max).($x, $z), $max.$y, $material.clone()),
-            rectangle!(($min, $max).($y, $z), $min.$x, $material.clone()),
-            rectangle!(($min, $max).($y, $z), $max.$y, $material),
+            rectangle!(($min, $max), $min, [2, 0, 1], $material.clone()),
+            rectangle!(($min, $max), $max, [2, 0, 1], $material.clone()),
+            rectangle!(($min, $max), $min, [1, 0, 2], $material.clone()),
+            rectangle!(($min, $max), $max, [1, 0, 2], $material.clone()),
+            rectangle!(($min, $max), $min, [0, 1, 2], $material.clone()),
+            rectangle!(($min, $max), $max, [0, 1, 2], $material),
         ]
     };
 }
@@ -49,7 +51,7 @@ impl Block {
             "Block must have positive volume"
         );
 
-        let rectangles = rectangles!((min_point, max_point).(x, y, z), material);
+        let rectangles = rectangles!((min_point, max_point), material);
         Self {
             rectangles,
             min_point,
