@@ -1,5 +1,7 @@
 mod aabb;
 mod hit_record;
+pub mod translation;
+pub mod rotation;
 
 pub use aabb::AABB;
 

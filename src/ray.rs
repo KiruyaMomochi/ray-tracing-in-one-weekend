@@ -33,6 +33,12 @@ impl Ray {
     pub fn at(&self, t: f64) -> Point3 {
         self.origin + t * self.direction
     }
+
+    /// Move the ray origin by the given offset.
+    /// This is useful for translating the ray into the object's local space.
+    pub fn move_origin_by(self, offset: Vec3<f64>) -> Self {
+        Self::new(self.origin + offset, self.direction, self.time)
+    }
 }
 
 impl Ray {

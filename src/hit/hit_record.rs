@@ -28,6 +28,7 @@ impl OutwardHitRecord {
         material: Arc<dyn Material>,
         (u, v): (f64, f64),
     ) -> Self {
+        assert!(point.is_valid_point());
         let front_face = ray.direction().dot(normal_outward) < crate::vec3::Float::EPSILON;
         Self {
             point,

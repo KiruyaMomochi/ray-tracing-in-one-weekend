@@ -19,12 +19,9 @@ mod scene {
     use rtweekend::{
         camera::CameraBuilder,
         material::DiffuseLight,
-        object::{
-            rectangle::{XYRectangle, XZRectangle, YZRectangle},
-            Block,
-        },
+        object::{Block, rectangle::AxisAlignedRectangle},
         texture::{Image, Noise},
-        Hit,
+        Hit, hit::{rotation::Rotate, translation::Translate},
     };
 
     pub struct Scene {
@@ -191,7 +188,7 @@ mod scene {
 
         // light is brighter than `(1.0, 1.0, 1.0)` to bright enough to light up the scene
         let diffuse_light = Arc::new(DiffuseLight::new_solid(Color::new(4.0, 4.0, 4.0)));
-        world.add(XYRectangle::new(
+        world.add(AxisAlignedRectangle::new_xy(
             (3.0, 1.0),
             (5.0, 3.0),
             -2.0,
@@ -221,43 +218,51 @@ mod scene {
         let green = Arc::new(Lambertian::new_solid(GREEN));
         let light = Arc::new(DiffuseLight::new_solid(LIGHT));
 
+        let block_front = Block::new(
+            Point3::new(0.0, 0.0, 0.0),
+            Point3::new(165.0, 330.0, 165.0),
+            white.clone(),
+        );
+        let block_front = Rotate::new_y(block_front, 15.0);
+        let block_front = Translate::new(block_front, Vec3::new(265.0, 0.0, 295.0));
+
+        let block_back = Block::new(
+            Point3::new(0.0, 0.0, 0.0),
+            Point3::new(165.0, 165.0, 165.0),
+            white.clone(),
+        );
+        let block_back = Rotate::new_y(block_back, -18.0);
+        let block_back = Translate::new(block_back, Vec3::new(130.0, 0.0, 65.0));
+
         let objects: Vec<Box<dyn Hit>> = vec![
-            Box::new(YZRectangle::new((0.0, 0.0), (555.0, 555.0), 555.0, green)),
-            Box::new(YZRectangle::new((0.0, 0.0), (555.0, 555.0), 0.0, red)),
-            Box::new(XZRectangle::new(
+            Box::new(AxisAlignedRectangle::new_yz((0.0, 0.0), (555.0, 555.0), 555.0, green)),
+            Box::new(AxisAlignedRectangle::new_yz((0.0, 0.0), (555.0, 555.0), 0.0, red)),
+            Box::new(AxisAlignedRectangle::new_xz(
                 (213.0, 227.0),
                 (343.0, 332.0),
                 554.0,
                 light,
             )),
-            Box::new(XZRectangle::new(
+            Box::new(AxisAlignedRectangle::new_xz(
                 (0.0, 0.0),
                 (555.0, 555.0),
                 0.0,
                 white.clone(),
             )),
-            Box::new(XZRectangle::new(
+            Box::new(AxisAlignedRectangle::new_xz(
                 (0.0, 0.0),
                 (555.0, 555.0),
                 555.0,
                 white.clone(),
             )),
-            Box::new(XYRectangle::new(
+            Box::new(AxisAlignedRectangle::new_xy(
                 (0.0, 0.0),
                 (555.0, 555.0),
                 555.0,
                 white.clone(),
             )),
-            Box::new(Block::new(
-                Point3::new(130.0, 0.0, 65.0),
-                Point3::new(295.0, 165.0, 230.0),
-                white.clone(),
-            )),
-            Box::new(Block::new(
-                Point3::new(265.0, 0.0, 295.0),
-                Point3::new(430.0, 330.0, 460.0),
-                white,
-            )),
+            Box::new(block_front),
+            Box::new(block_back),
         ];
 
         Scene {
