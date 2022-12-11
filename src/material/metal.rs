@@ -1,4 +1,4 @@
-use crate::{Color, HitRecord, Material, Ray, Vec3};
+use crate::{Color, Material, Ray, Vec3, hit::AgainstRayHitRecord};
 
 #[derive(Debug, Clone)]
 pub struct Metal {
@@ -15,7 +15,7 @@ impl Metal {
 }
 
 impl Material for Metal {
-    fn scatter(&self, ray: &Ray, hit_record: &HitRecord) -> Option<(Ray, Color)> {
+    fn scatter(&self, ray: &Ray, hit_record: &AgainstRayHitRecord) -> Option<(Ray, Color)> {
         let reflected = ray
             .direction()
             .reflect(hit_record.normal_against_ray)

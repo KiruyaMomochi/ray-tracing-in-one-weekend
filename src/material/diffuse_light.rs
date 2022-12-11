@@ -1,6 +1,6 @@
 use crate::{
     texture::{SolidColor, Texture},
-    Color, Material, Point3,
+    Color, Material, Point3, hit::AgainstRayHitRecord,
 };
 
 /// A material which emits light with color from a texture.
@@ -25,7 +25,7 @@ impl<T: Texture> Material for DiffuseLight<T> {
     fn scatter(
         &self,
         _ray: &crate::Ray,
-        _hit_record: &crate::HitRecord,
+        _hit_record: &AgainstRayHitRecord,
     ) -> Option<(crate::Ray, crate::Color)> {
         None
     }
