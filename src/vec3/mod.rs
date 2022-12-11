@@ -18,7 +18,7 @@ use rand::{
 };
 
 #[derive(Clone, Debug, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Vec3<T: Copy>([T; 3]);
+pub struct Vec3<T>([T; 3]);
 
 impl<T: Copy + Default> Default for Vec3<T> {
     fn default() -> Self {
@@ -26,7 +26,7 @@ impl<T: Copy + Default> Default for Vec3<T> {
     }
 }
 
-impl<T: Copy> Vec3<T> {
+impl<T> Vec3<T> {
     pub const fn new(x: T, y: T, z: T) -> Self {
         Self([x, y, z])
     }
@@ -42,6 +42,63 @@ impl<T: Copy> Vec3<T> {
         Self([value, value, value])
     }
 
+    pub fn x_mut(&mut self) -> &mut T {
+        &mut self[0]
+    }
+
+    pub fn y_mut(&mut self) -> &mut T {
+        &mut self[1]
+    }
+
+    pub fn z_mut(&mut self) -> &mut T {
+        &mut self[2]
+    }
+
+    pub fn r_mut(&mut self) -> &mut T {
+        &mut self[0]
+    }
+
+    pub fn g_mut(&mut self) -> &mut T {
+        &mut self[1]
+    }
+
+    pub fn b_mut(&mut self) -> &mut T {
+        &mut self[2]
+    }
+
+    pub fn into_array(self) -> [T; 3] {
+        self.0
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &T> {
+        self.0.iter()
+    }
+
+    pub fn apply_mut<F: Fn(&mut T)>(mut self, f: F) {
+        f(&mut self[0]);
+        f(&mut self[1]);
+        f(&mut self[2]);
+    }
+
+    pub fn apply_binary_mut<F: Fn(&mut T, &T)>(&mut self, other: &Self, f: F) {
+        f(&mut self[0], &other[0]);
+        f(&mut self[1], &other[1]);
+        f(&mut self[2], &other[2]);
+    }
+
+    /// Returns the length of the vector, which is always 3.
+    ///
+    /// **Note:** This is not the same as the norm of the vector.
+    pub fn len(&self) -> usize {
+        3
+    }
+
+    pub fn is_empty(&self) -> bool {
+        false
+    }
+}
+
+impl<T: Copy> Vec3<T> {
     pub fn x(&self) -> T {
         self[0]
     }
@@ -66,16 +123,8 @@ impl<T: Copy> Vec3<T> {
         self[2]
     }
 
-    pub fn into_array(self) -> [T; 3] {
-        self.0
-    }
-
     pub fn into_tuple(self) -> (T, T, T) {
         (self[0], self[1], self[2])
-    }
-
-    pub fn iter(&self) -> impl Iterator<Item = &T> {
-        self.0.iter()
     }
 
     pub fn apply<R: Copy, F: Fn(T) -> R>(&self, f: F) -> Vec3<R> {
@@ -90,32 +139,21 @@ impl<T: Copy> Vec3<T> {
         )
     }
 
-    pub fn apply_mut<F: Fn(&mut T)>(mut self, f: F) {
-        f(&mut self[0]);
-        f(&mut self[1]);
-        f(&mut self[2]);
-    }
-
-    pub fn apply_binary_mut<F: Fn(&mut T, &T)>(&mut self, other: &Self, f: F) {
-        f(&mut self[0], &other[0]);
-        f(&mut self[1], &other[1]);
-        f(&mut self[2], &other[2]);
-    }
 }
 
-impl<T: Copy> From<[T; 3]> for Vec3<T> {
+impl<T> From<[T; 3]> for Vec3<T> {
     fn from(arr: [T; 3]) -> Self {
         Self(arr)
     }
 }
 
-impl<T: Copy> From<(T, T, T)> for Vec3<T> {
+impl<T> From<(T, T, T)> for Vec3<T> {
     fn from((x, y, z): (T, T, T)) -> Self {
         Self([x, y, z])
     }
 }
 
-impl<T: Copy> IntoIterator for Vec3<T> {
+impl<T> IntoIterator for Vec3<T> {
     type Item = T;
     type IntoIter = std::array::IntoIter<T, 3>;
 
@@ -215,8 +253,8 @@ where
 
 impl<T> Vec3<T>
 where
-    T: Copy + SampleUniform,
-    Range<T>: SampleRange<T>,
+    T: SampleUniform,
+    Range<T>: SampleRange<T> + Clone,
 {
     /// Generate a random vector with components in the `range`.
     pub fn random(range: Range<T>) -> Self {
@@ -440,7 +478,7 @@ where
     }
 }
 
-impl<T: Copy> Index<usize> for Vec3<T> {
+impl<T> Index<usize> for Vec3<T> {
     type Output = T;
 
     fn index(&self, i: usize) -> &Self::Output {
@@ -448,7 +486,7 @@ impl<T: Copy> Index<usize> for Vec3<T> {
     }
 }
 
-impl<T: Copy> IndexMut<usize> for Vec3<T> {
+impl<T> IndexMut<usize> for Vec3<T> {
     fn index_mut(&mut self, i: usize) -> &mut Self::Output {
         &mut self.0[i]
     }

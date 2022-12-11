@@ -63,4 +63,8 @@ impl Point3 {
             }
         }
     }
+
+    pub fn is_valid_point(&self) -> bool {
+        self.iter().all(|x| x.is_finite())
+    }
 }
