@@ -15,7 +15,6 @@ pub use object::World;
 use rand::Rng;
 pub use ray::Ray;
 pub use vec3::{Color, Point3, Vec3};
-pub type HitRecord = hit::AgainstRayHitRecord;
 
 use rayon::prelude::*;
 use std::{error::Error, io::Write};
@@ -65,8 +64,16 @@ impl RayTracer {
                     let (width, height) = (image_width as f64, image_height as f64);
                     let (i, j) = (i as f64, height - j as f64 - 1.0);
 
-                    let mut pixel_color_sum = Color::zeros();
-                    for _ in 0..samples_per_pixel {
+                    let mut pixel_color_sum = ray_color(
+                        camera.cast(i / (width - 1.0), j / (height - 1.0)),
+                        background,
+                        world,
+                        max_depth,
+                        t_min,
+                        t_max,
+                    );
+
+                    for _ in 1..samples_per_pixel {
                         // u: left 0.0 -> 1.0 right
                         // v: botm 0.0 -> 1.0 up
                         // rng.gen: standard distribution, [0, 1)
@@ -115,7 +122,9 @@ pub fn ray_color<T: Hit>(
         Color::BLACK
     } else if let Some(hit) = ray.clone().hit(object, t_min, t_max) {
         // emitted color from the object at hit point
+        // this may larger than 1.0, which means the object is brighter
         let emitted = hit.material.emit(hit.point, hit.u, hit.v);
+        let hit = hit.into_against_ray();
 
         let color = if let Some((ray, attenuation)) = hit.material.scatter(&ray, &hit) {
             // the scattered ray

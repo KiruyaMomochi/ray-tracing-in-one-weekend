@@ -1,4 +1,4 @@
-use crate::{Material, HitRecord, Ray, Color};
+use crate::{Material, Ray, Color, hit::AgainstRayHitRecord};
 
 #[derive(Debug, Clone)]
 pub struct Dielectric {
@@ -37,7 +37,7 @@ impl Dielectric {
 }
 
 impl Material for Dielectric {
-    fn scatter(&self, ray: &Ray, hit_record: &HitRecord) -> Option<(Ray, Color)> {
+    fn scatter(&self, ray: &Ray, hit_record: &AgainstRayHitRecord) -> Option<(Ray, Color)> {
         let refraction_ratio = if hit_record.is_front() {
             1.0 / self.index_of_refraction
         } else {

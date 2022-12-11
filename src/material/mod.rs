@@ -8,7 +8,7 @@ pub use lambertian::Lambertian;
 pub use metal::Metal;
 pub use diffuse_light::DiffuseLight;
 
-use crate::{Color, HitRecord, Point3, Ray};
+use crate::{Color, Point3, Ray, hit::AgainstRayHitRecord};
 use std::fmt::Debug;
 
 /// A material that can be hit by a ray
@@ -17,7 +17,7 @@ pub trait Material: Debug + Sync + Send {
     ///
     /// For details, see [Volume Scattering Process](https://www.pbr-book.org/3ed-2018/Volume_Scattering/Volume_Scattering_Processes)
     /// in the Physically Based Rendering book.
-    fn scatter(&self, ray: &Ray, hit_record: &HitRecord) -> Option<(Ray, Color)>;
+    fn scatter(&self, ray: &Ray, hit_record: &AgainstRayHitRecord) -> Option<(Ray, Color)>;
 
     /// Return the emitted color of material. For non-emissive materials, this
     /// is always black.

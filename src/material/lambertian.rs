@@ -1,6 +1,7 @@
 use crate::Vec3;
+use crate::hit::AgainstRayHitRecord;
 use crate::texture::SolidColor;
-use crate::{Material, HitRecord, Ray, Color, texture::Texture};
+use crate::{Material, Ray, Color, texture::Texture};
 
 /// Diffuse material, which can either scatter always and attenuate by its
 /// reflectance R, or it can scatter with no attenuation but absorb the
@@ -24,7 +25,7 @@ impl Lambertian<SolidColor> {
 }
 
 impl<T: Texture> Material for Lambertian<T> {
-    fn scatter(&self, ray: &Ray, hit_record: &HitRecord) -> Option<(Ray, Color)> {
+    fn scatter(&self, ray: &Ray, hit_record: &AgainstRayHitRecord) -> Option<(Ray, Color)> {
         let scatter_direction =
             hit_record.normal_against_ray + Vec3::random_in_unit_sphere().normalized();
 

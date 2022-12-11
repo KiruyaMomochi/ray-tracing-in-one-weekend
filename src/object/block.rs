@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
-use crate::{Material, Point3, Hit, hit::AABB, HitRecord, Ray};
-use paste::paste;
-
-use super::rectangle::{AxisAlignedRectangle, XYRectangle, XZRectangle, YZRectangle};
+use crate::{
+    hit::{OutwardHitRecord, AABB},
+    Hit, Material, Point3, Ray,
+};
 
 /// An axis-aligned block of space.
 /// It holds 6 rectangles, one for each face.
@@ -59,7 +59,7 @@ impl Block {
 }
 
 impl Hit for Block {
-    fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<OutwardHitRecord> {
         self.rectangles.hit(ray, t_min, t_max)
     }
 

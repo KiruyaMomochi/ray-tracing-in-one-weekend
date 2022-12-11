@@ -1,6 +1,6 @@
 use std::{sync::Arc, f64::consts::PI};
 
-use crate::{hit::{OutwardHitRecord, AABB}, Hit, Material, Point3, Vec3, HitRecord, Ray};
+use crate::{hit::{OutwardHitRecord, AABB}, Hit, Material, Point3, Vec3, Ray};
 
 #[derive(Debug, Clone)]
 pub struct Sphere {
@@ -80,7 +80,7 @@ impl Sphere {
     }
 }
 
-fn hit(center: Point3, radius: f64, material: Arc<dyn Material>, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+fn hit(center: Point3, radius: f64, material: Arc<dyn Material>, ray: &Ray, t_min: f64, t_max: f64) -> Option<OutwardHitRecord> {
         // oc is (A - C)
         let oc = ray.origin() - center;
 
@@ -116,7 +116,7 @@ fn hit(center: Point3, radius: f64, material: Arc<dyn Material>, ray: &Ray, t_mi
         let normal_outward = (point - center) / radius;
         let uv = to_sphere_uv(&normal_outward);
 
-        Some(OutwardHitRecord::new(point, ray, normal_outward, t, material, uv).into_against_ray())
+        Some(OutwardHitRecord::new(point, ray, normal_outward, t, material, uv))
 }
 
 impl Hit for Sphere {
@@ -139,7 +139,7 @@ impl Hit for Sphere {
     ///
     ///     (b.b) t^2 + (2b.(A-C)) t + ((A-C).(A-C) - r^2) = 0
     ///
-    fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<OutwardHitRecord> {
         let center = self.center();
         let radius = self.radius();
         let material = self.material.clone();
@@ -162,7 +162,7 @@ impl Hit for MovingSphere {
     /// or `None` if does not hit.
     ///
     /// Refer to [`Sphere::hit`] for the equation.
-    fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<OutwardHitRecord> {
         let center = self.center(ray.time());
         let radius = self.radius();
         let material = self.material.clone();
@@ -178,6 +178,6 @@ impl Hit for MovingSphere {
         let box_from = AABB::new(center_from - offset, center_from + offset);
         let box_to = AABB::new(center_to - offset, center_to + offset);
 
-        Some(box_from.merge(box_to))
+        Some(box_from.merge(&box_to))
     }
 }

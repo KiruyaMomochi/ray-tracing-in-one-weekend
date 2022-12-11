@@ -1,10 +1,9 @@
 use crate::Ray;
-use paste::paste;
 use std::sync::Arc;
 
 use crate::{
     hit::{OutwardHitRecord, AABB},
-    Hit, HitRecord, Material, Vec3,
+    Hit, Material, Vec3,
 };
 
 macro_rules! axis_aligned_rectangles {

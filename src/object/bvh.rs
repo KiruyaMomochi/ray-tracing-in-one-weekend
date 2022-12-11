@@ -1,6 +1,6 @@
 use rand::Rng;
 
-use crate::{Hit, HitRecord, hit::AABB, Ray};
+use crate::{Hit, hit::{AABB, OutwardHitRecord}, Ray};
 
 /// Bounding volume hierarchy (BVH) tree node.
 ///
@@ -65,7 +65,7 @@ impl BVH {
                 let right_bounding_box = right
                     .bounding_box(time_from, time_to)
                     .expect("No bounding box in BVHNode constructor");
-                let bounding_box = left_bounding_box.merge(right_bounding_box);
+                let bounding_box = left_bounding_box.merge(&right_bounding_box);
 
                 Self {
                     bounding_box,
@@ -81,7 +81,7 @@ impl BVH {
                 let left = objects;
                 let left = Box::new(Self::new(left, time_from, time_to));
                 let right = Box::new(Self::new(right, time_from, time_to));
-                let bounding_box = left.bounding_box.merge(right.bounding_box);
+                let bounding_box = left.bounding_box.merge(&right.bounding_box);
 
                 Self {
                     bounding_box,
@@ -94,7 +94,7 @@ impl BVH {
 }
 
 impl Hit for BVH {
-    fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<OutwardHitRecord> {
         if !self.bounding_box.is_hit(&ray, t_min, t_max) {
             return None;
         }
@@ -116,7 +116,7 @@ impl Hit for BVH {
     }
 
     fn bounding_box(&self, _: f64, _: f64) -> Option<AABB> {
-        Some(self.bounding_box)
+        Some(self.bounding_box.clone())
     }
 }
 

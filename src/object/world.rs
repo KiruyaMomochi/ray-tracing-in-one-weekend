@@ -1,4 +1,4 @@
-use crate::{Hit, HitRecord, hit::AABB, Ray};
+use crate::{Hit, hit::{AABB, OutwardHitRecord}, Ray};
 
 // Vec<Box<dyn trait>> has an implict 'static lifetime
 // https://stackoverflow.com/questions/70717050/why-do-i-need-static-lifetime-here-and-how-to-fix-it
@@ -26,7 +26,7 @@ impl Default for World {
 }
 
 impl Hit for World {
-    fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<OutwardHitRecord> {
         self.0.hit(ray, t_min, t_max)
     }
 

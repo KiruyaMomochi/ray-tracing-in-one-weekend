@@ -1,7 +1,6 @@
 use crate::{
-    hit::Hit,
+    hit::{Hit, OutwardHitRecord},
     vec3::{Point3, Vec3},
-    HitRecord,
 };
 
 #[derive(Debug, Clone)]
@@ -37,7 +36,7 @@ impl Ray {
 }
 
 impl Ray {
-    pub fn hit<T: Hit>(&self, hittable: &T, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    pub fn hit<T: Hit>(self, hittable: &T, t_min: f64, t_max: f64) -> Option<OutwardHitRecord> {
         hittable.hit(self, t_min, t_max)
     }
 }
