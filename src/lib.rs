@@ -49,19 +49,25 @@ impl<H: Hit> RayTracer<H> {
         let (width, height) = (image_width as f64, image_height as f64);
         let (i, j) = (i as f64, height - j as f64 - 1.0);
 
-        let ray = self.camera.cast(i / (width - 1.0), j / (height - 1.0));
-        debug!("## {} {}", i, j);
+        let mut pixel_color_sum = Color::zeros();
 
-        let mut pixel_color_sum = ray_color(
-            ray,
-            self.background,
-            &self.world,
-            self.max_depth,
-            t_min,
-            t_max,
-        );
+        {
+            debug!("## {} {} ({})", i, j, 0);
+            let (u, v) = (i / (width - 1.0), j / (height - 1.0));
+            let ray = self.camera.cast(u, v);
 
-        for _ in 1..self.samples_per_pixel {
+            pixel_color_sum += ray_color(
+                ray,
+                self.background,
+                &self.world,
+                self.max_depth,
+                t_min,
+                t_max,
+            );
+        }
+
+        for run in 1..self.samples_per_pixel {
+            debug!("## {} {} ({})", i, j, run);
             // u: left 0.0 -> 1.0 right
             // v: botm 0.0 -> 1.0 up
             // rng.gen: standard distribution, [0, 1)
@@ -119,7 +125,8 @@ impl<H: Hit> RayTracer<H> {
 
     pub fn trace<T: Write>(&self, buffer: &mut T) -> Result<(), Box<dyn Error>> {
         // To fix the shadow acne problem, which some hit rays may not at exactly t = 0
-        self.trace_in(buffer, f64::EPSILON, f64::INFINITY)
+        // I have seen 0.0000000000000002775557561562895, so f64::EPSILON is not a choice here
+        self.trace_in(buffer, 1e-10, f64::INFINITY)
     }
 }
 

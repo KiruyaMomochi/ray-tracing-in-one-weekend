@@ -1,3 +1,5 @@
+use std::ops::Range;
+
 use rand::Rng;
 
 use crate::{Hit, hit::{AABB, OutwardHitRecord}, Ray};
@@ -44,7 +46,10 @@ impl BVH {
     /// * If the list of objects is empty
     /// * If any object does not have a bounding box
     /// * If any bounding box has a NaN component
-    pub fn new(mut objects: Vec<Box<dyn Hit>>, time_from: f64, time_to: f64) -> Self {
+    pub fn new(mut objects: Vec<Box<dyn Hit>>, time_range: Range<f64>) -> Self {
+        let time_from = time_range.start;
+        let time_to = time_range.end;
+
         match objects.len() {
             0 => panic!("No objects in BVHNode constructor"),
             1 => Self {
@@ -81,8 +86,8 @@ impl BVH {
                 // right comes first because we want to split the list in half
                 let right = objects.split_off(len / 2);
                 let left = objects;
-                let left = Box::new(Self::new(left, time_from, time_to));
-                let right = Box::new(Self::new(right, time_from, time_to));
+                let left = Box::new(Self::new(left, time_range.clone()));
+                let right = Box::new(Self::new(right, time_range));
                 let bounding_box = left.bounding_box.merge(&right.bounding_box);
 
                 Self {
@@ -151,7 +156,7 @@ mod tests {
             )),
         ];
 
-        let _ = BVH::new(objects, 0.0, 1.0);
+        let _ = BVH::new(objects, 0.0..1.0);
         Ok(())
     }
 }

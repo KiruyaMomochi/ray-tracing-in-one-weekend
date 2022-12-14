@@ -1,6 +1,9 @@
-use std::{sync::Arc, f64::consts::PI};
+use std::{f64::consts::PI, ops::Range, sync::Arc};
 
-use crate::{hit::{OutwardHitRecord, AABB}, Hit, Material, Point3, Vec3, Ray};
+use crate::{
+    hit::{OutwardHitRecord, AABB},
+    Hit, Material, Point3, Ray, Vec3,
+};
 
 #[derive(Debug, Clone)]
 pub struct Sphere {
@@ -47,17 +50,16 @@ pub struct MovingSphere {
 
 impl MovingSphere {
     pub fn new(
-        time_from: f64,
+        time_range: Range<f64>,
         center_from: Point3,
-        time_to: f64,
         center_to: Point3,
         radius: f64,
         material: Arc<dyn Material>,
     ) -> Self {
         Self {
-            time_from,
+            time_from: time_range.start,
             center_from,
-            time_to,
+            time_to: time_range.end,
             center_to,
             radius,
             material,
@@ -75,48 +77,68 @@ impl MovingSphere {
 }
 
 impl Sphere {
-    pub fn into_moving(self, time_from: f64, time_to: f64, center_to: Point3) -> MovingSphere {
-        MovingSphere::new(time_from, self.center, time_to, center_to, self.radius, self.material)
+    pub fn into_moving(self, time_range: Range<f64>, center_to: Point3) -> MovingSphere {
+        MovingSphere::new(
+            time_range,
+            self.center,
+            center_to,
+            self.radius,
+            self.material,
+        )
     }
 }
 
-fn hit(center: Point3, radius: f64, material: Arc<dyn Material>, ray: &Ray, t_min: f64, t_max: f64) -> Option<OutwardHitRecord> {
-        // oc is (A - C)
-        let oc = ray.origin() - center;
+fn hit(
+    center: Point3,
+    radius: f64,
+    material: Arc<dyn Material>,
+    ray: &Ray,
+    t_min: f64,
+    t_max: f64,
+) -> Option<OutwardHitRecord> {
+    // oc is (A - C)
+    let oc = ray.origin() - center;
 
-        // a x^2 + b x + c = y
+    // a x^2 + b x + c = y
 
-        // let b = 2 * half because
-        // - discriminant has a factor of 2 and,
-        // - b part also has a factor of 2
+    // let b = 2 * half because
+    // - discriminant has a factor of 2 and,
+    // - b part also has a factor of 2
 
-        let direction = ray.direction();
-        let a = direction.len_squared();
-        let h = oc.dot(direction); // b / 2
-        let c = oc.len_squared() - radius * radius;
+    let direction = ray.direction();
+    let a = direction.len_squared();
+    let h = oc.dot(direction); // b / 2
+    let c = oc.len_squared() - radius * radius;
 
-        // b^2 - 4 ac > 0 => h^2 - ac > 0 => equations has 2 roots
-        let discriminant_h = h * h - a * c;
+    // b^2 - 4 ac > 0 => h^2 - ac > 0 => equations has 2 roots
+    let discriminant_h = h * h - a * c;
 
-        if discriminant_h < 0.0 {
-            // Does not hit any point
-            return None;
-        };
+    if discriminant_h < 0.0 {
+        // Does not hit any point
+        return None;
+    };
 
-        // (-b +- sqrt(dis)) / (2a) => (-h +- sqrt(dis_h)) / a
-        let discriminant_s = discriminant_h.sqrt();
-        let roots = [(-h - discriminant_s) / a, (-h + discriminant_s) / a];
+    // (-b +- sqrt(dis)) / (2a) => (-h +- sqrt(dis_h)) / a
+    let discriminant_s = discriminant_h.sqrt();
+    let roots = [(-h - discriminant_s) / a, (-h + discriminant_s) / a];
 
-        // Compute the roots and find acceptable one
-        let t = roots
-            .into_iter()
-            .find(|root| root >= &t_min && root <= &t_max)?;
+    // Compute the roots and find acceptable one
+    let t = roots
+        .into_iter()
+        .find(|root| root >= &t_min && root <= &t_max)?;
 
-        let point = ray.at(t);
-        let normal_outward = (point - center) / radius;
-        let uv = to_sphere_uv(&normal_outward);
+    let point = ray.at(t);
+    let normal_outward = (point - center) / radius;
+    let uv = to_sphere_uv(&normal_outward);
 
-        Some(OutwardHitRecord::new(point, ray, normal_outward, t, material, uv))
+    Some(OutwardHitRecord::new(
+        point,
+        ray,
+        normal_outward,
+        t,
+        material,
+        uv,
+    ))
 }
 
 impl Hit for Sphere {
@@ -150,10 +172,7 @@ impl Hit for Sphere {
     fn bounding_box(&self, _: f64, _: f64) -> Option<AABB> {
         let center = self.center();
         let offset = Vec3::constant(self.radius());
-        Some(AABB::new(
-            center - offset,
-            center + offset,
-        ))
+        Some(AABB::new(center - offset, center + offset))
     }
 }
 

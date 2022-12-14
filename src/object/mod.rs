@@ -1,4 +1,4 @@
-mod sphere;
+pub mod sphere;
 mod world;
 pub mod rectangle;
 mod block;

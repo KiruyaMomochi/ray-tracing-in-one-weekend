@@ -306,7 +306,7 @@ where
     /// ```
     /// use rtweekend::Vec3;
     /// let x = Vec3::new(3.0, 4.0, 0.0);
-    /// assert_eq!(x.len(), 5.0);
+    /// assert_eq!(x.norm(), 5.0);
     /// ```
     pub fn norm(&self) -> T {
         self.len_squared().sqrt()

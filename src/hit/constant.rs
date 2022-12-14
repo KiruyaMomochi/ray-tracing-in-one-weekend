@@ -49,7 +49,7 @@ impl<H: Hit, T: Texture> ConstantMedium<H, T> {
 }
 
 impl<H: Hit> ConstantMedium<H, SolidColor> {
-    pub fn solid(boundary: H, color: Color, density: f64) -> Self {
+    pub fn new_solid(boundary: H, color: Color, density: f64) -> Self {
         Self::new(boundary, SolidColor::new(color), density)
     }
 }

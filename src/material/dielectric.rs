@@ -52,7 +52,6 @@ impl Material for Dielectric {
             .min(1.0);
         let sin_theta = (1.0 - cos_theta.powi(2)).sqrt();
 
-        // TODO: or refraction_ratio?
         let reflectance = Self::reflectance(cos_theta, self.index_of_refraction);
         let cannot_refract = refraction_ratio * sin_theta > 1.0;
         let will_reflect = reflectance > rand::random::<f64>();

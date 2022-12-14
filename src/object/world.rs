@@ -25,8 +25,8 @@ impl World {
         self.0.extend(objects);
     }
 
-    pub fn into_bvh(self, time_range: &Range<f64>) -> BVH {
-        BVH::new(self.0, time_range.start, time_range.end)
+    pub fn into_bvh(self, time_range: Range<f64>) -> BVH {
+        BVH::new(self.0, time_range)
     }
 }
 
