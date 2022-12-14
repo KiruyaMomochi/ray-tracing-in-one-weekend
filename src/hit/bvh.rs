@@ -45,7 +45,6 @@ impl BVH {
     /// * If any object does not have a bounding box
     /// * If any bounding box has a NaN component
     pub fn new(mut objects: Vec<Box<dyn Hit>>, time_from: f64, time_to: f64) -> Self {
-        let axis = rand::thread_rng().gen_range(0..3);
         match objects.len() {
             0 => panic!("No objects in BVHNode constructor"),
             1 => Self {
@@ -56,6 +55,7 @@ impl BVH {
                 right: None,
             },
             2 => {
+                let axis = rand::thread_rng().gen_range(0..3);
                 sort_objects_by_axis(&mut objects, axis, time_from, time_to);
 
                 let left = objects.remove(0);
@@ -75,6 +75,7 @@ impl BVH {
                 }
             }
             len => {
+                let axis = rand::thread_rng().gen_range(0..3);
                 sort_objects_by_axis(&mut objects, axis, time_from, time_to);
 
                 // right comes first because we want to split the list in half
@@ -100,12 +101,14 @@ impl Hit for BVH {
             return None;
         }
 
+        let mut t_max = t_max;
+
         let left = self
             .left
             .as_ref()
             .and_then(|left| left.hit(ray.clone(), t_min, t_max));
-        if left.is_some() {
-            return left;
+        if let Some(left) = &left {
+            t_max = t_max.min(left.t);
         }
 
         let right = self
@@ -113,7 +116,7 @@ impl Hit for BVH {
             .as_ref()
             .and_then(|right| right.hit(ray, t_min, t_max));
 
-        right
+        right.or(left)
     }
 
     fn bounding_box(&self, _: f64, _: f64) -> Option<AABB> {

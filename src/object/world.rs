@@ -1,4 +1,6 @@
-use crate::{Hit, hit::{AABB, OutwardHitRecord}, Ray};
+use std::ops::Range;
+
+use crate::{Hit, hit::{AABB, OutwardHitRecord, BVH}, Ray};
 
 // Vec<Box<dyn trait>> has an implict 'static lifetime
 // https://stackoverflow.com/questions/70717050/why-do-i-need-static-lifetime-here-and-how-to-fix-it
@@ -17,6 +19,10 @@ impl World {
 
     pub fn add<T: Hit + 'static>(&mut self, object: T) {
         self.0.push(Box::new(object));
+    }
+
+    pub fn into_bvh(self, time_range: &Range<f64>) -> BVH {
+        BVH::new(self.0, time_range.start, time_range.end)
     }
 }
 
