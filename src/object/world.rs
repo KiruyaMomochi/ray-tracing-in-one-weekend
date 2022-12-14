@@ -21,6 +21,10 @@ impl World {
         self.0.push(Box::new(object));
     }
 
+    pub fn extend(&mut self, objects: Vec<Box<dyn Hit>>) {
+        self.0.extend(objects);
+    }
+
     pub fn into_bvh(self, time_range: &Range<f64>) -> BVH {
         BVH::new(self.0, time_range.start, time_range.end)
     }

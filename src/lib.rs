@@ -20,8 +20,8 @@ pub use vec3::{Color, Point3, Vec3};
 use rayon::prelude::*;
 use std::{error::Error, io::Write};
 
-pub struct RayTracer {
-    pub world: World,
+pub struct RayTracer<H: Hit> {
+    pub world: H,
     pub camera: Camera,
     pub background: Color,
     pub max_depth: i64,
@@ -31,7 +31,7 @@ pub struct RayTracer {
 
 const COLOR_MAX: u8 = 255;
 
-impl RayTracer {
+impl<H: Hit> RayTracer<H> {
     fn aspect_ratio(&self) -> f64 {
         self.camera.aspect_ratio()
     }

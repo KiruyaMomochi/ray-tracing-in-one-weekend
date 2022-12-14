@@ -18,10 +18,11 @@ mod scene {
     use super::*;
     use rtweekend::{
         camera::CameraBuilder,
+        hit::{rotation::Rotate, translation::Translate, ConstantMedium},
         material::DiffuseLight,
-        object::{Block, rectangle::AxisAlignedRectangle},
+        object::{rectangle::AxisAlignedRectangle, Block},
         texture::{Image, Noise},
-        Hit, hit::{rotation::Rotate, translation::Translate, ConstantMedium},
+        Hit,
     };
 
     pub struct Scene {
@@ -235,8 +236,18 @@ mod scene {
         let block_back = Translate::new(block_back, Vec3::new(130.0, 0.0, 65.0));
 
         let objects: Vec<Box<dyn Hit>> = vec![
-            Box::new(AxisAlignedRectangle::new_yz((0.0, 0.0), (555.0, 555.0), 555.0, green)),
-            Box::new(AxisAlignedRectangle::new_yz((0.0, 0.0), (555.0, 555.0), 0.0, red)),
+            Box::new(AxisAlignedRectangle::new_yz(
+                (0.0, 0.0),
+                (555.0, 555.0),
+                555.0,
+                green,
+            )),
+            Box::new(AxisAlignedRectangle::new_yz(
+                (0.0, 0.0),
+                (555.0, 555.0),
+                0.0,
+                red,
+            )),
             Box::new(AxisAlignedRectangle::new_xz(
                 (213.0, 227.0),
                 (343.0, 332.0),
@@ -308,8 +319,18 @@ mod scene {
         let block_back = ConstantMedium::solid(block_back, Color::WHITE, 0.01);
 
         let objects: Vec<Box<dyn Hit>> = vec![
-            Box::new(AxisAlignedRectangle::new_yz((0.0, 0.0), (555.0, 555.0), 555.0, green)),
-            Box::new(AxisAlignedRectangle::new_yz((0.0, 0.0), (555.0, 555.0), 0.0, red)),
+            Box::new(AxisAlignedRectangle::new_yz(
+                (0.0, 0.0),
+                (555.0, 555.0),
+                555.0,
+                green,
+            )),
+            Box::new(AxisAlignedRectangle::new_yz(
+                (0.0, 0.0),
+                (555.0, 555.0),
+                0.0,
+                red,
+            )),
             Box::new(AxisAlignedRectangle::new_xz(
                 (113.0, 127.0),
                 (443.0, 432.0),
@@ -373,7 +394,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut file = BufWriter::new(fs::File::create("image.ppm")?);
 
     let tracer = RayTracer {
-        world: scene.world,
+        world: scene.world.into_bvh(camera.time_range()),
         camera,
         background: scene.background,
         image_height,

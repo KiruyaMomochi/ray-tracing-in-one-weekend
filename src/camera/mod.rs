@@ -69,6 +69,10 @@ impl Camera {
     pub fn builder() -> CameraBuilder {
         CameraBuilder::new()
     }
+
+    pub fn time_range(&self) -> &Range<f64> {
+        &self.time_range
+    }
 }
 
 impl Display for Camera {
