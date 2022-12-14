@@ -105,14 +105,13 @@ impl<H: Hit> Hit for Rotate<H> {
         };
 
         // Otherwise, we need to calculate the bounding box again.
-        let mut time_range = self.time_range.write().unwrap();
-        *time_range = Some((time_from, time_to));
-        let mut bounding_box = self.bounding_box.write().unwrap();
-        *bounding_box = self.object.bounding_box(time_from, time_to).map(|aabb| {
-            aabb.into_iter_corners().fold(AABB::EMPTY, |aabb, corner| {
-                aabb.include(&self.rotate(&corner))
-            })
-        });
+        *self.time_range.write().unwrap() = Some((time_from, time_to));
+        *self.bounding_box.write().unwrap() =
+            self.object.bounding_box(time_from, time_to).map(|aabb| {
+                aabb.into_iter_corners().fold(AABB::EMPTY, |aabb, corner| {
+                    aabb.include(&self.rotate(&corner))
+                })
+            });
 
         self.bounding_box.read().unwrap().clone()
     }
