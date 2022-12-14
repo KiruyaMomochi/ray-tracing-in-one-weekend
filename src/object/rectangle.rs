@@ -138,10 +138,10 @@ impl Hit for AxisAlignedRectangle {
         min[self.axis[0]] = self.z - padding;
         max[self.axis[0]] = self.z + padding;
 
-        min[self.axis[1]] = self.x1;
+        min[self.axis[1]] = self.x0;
         max[self.axis[1]] = self.x1;
 
-        min[self.axis[2]] = self.y1;
+        min[self.axis[2]] = self.y0;
         max[self.axis[2]] = self.y1;
 
         Some(AABB::new(min, max))
