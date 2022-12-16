@@ -45,7 +45,7 @@ mod tests {
 
     #[test]
     fn read_image() {
-        let image = Reader::open("img/earthmap.jpg")
+        let image = Reader::open("texture/earthmap.jpg")
             .unwrap()
             .decode()
             .unwrap()

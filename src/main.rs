@@ -164,7 +164,7 @@ mod scene {
     }
 
     pub fn earth() -> Scene {
-        let earth_texture = Image::open("img/earthmap.jpg").unwrap();
+        let earth_texture = Image::open("texture/earthmap.jpg").unwrap();
         let earth_surface = Arc::new(Lambertian::new(earth_texture));
         let globe = Sphere::new(Point3::zeros(), 2.0, earth_surface);
 
@@ -456,7 +456,7 @@ mod scene {
         let white_sphere_boundary = Sphere::new(Point3::zeros(), 5000.0, glass_material);
         let white_sphere = ConstantMedium::new_solid(white_sphere_boundary, Color::WHITE, 0.0001);
 
-        let earth_texture = Image::open("img/earthmap.jpg").unwrap();
+        let earth_texture = Image::open("texture/earthmap.jpg").unwrap();
         let earth = Sphere::new(
             Point3::new(400.0, 200.0, 400.0),
             100.0,
